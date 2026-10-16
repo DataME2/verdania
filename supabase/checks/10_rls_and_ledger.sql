@@ -49,7 +49,9 @@ select test.ok((select count(*) from public.investment_projects
                 where country_id = '00000000-0000-0000-0002-000000000001') = 6, 'anon reads only published projects');
 select test.ok(exists (select 1 from public.country_configurations where slug = 'testland'), 'anon reads a published country');
 select test.ok((select count(*) from public.profiles) = 0, 'anon reads no profiles');
-select test.ok((select count(*) from public.public_profiles) = 0, 'no public profiles yet');
+select test.ok(not has_function_privilege('authenticated', 'public.handle_new_user()', 'execute')
+               and not has_function_privilege('anon', 'public.handle_new_user()', 'execute'),
+               'trigger functions are not callable through the API');
 do $$ begin
   insert into public.model_versions (version, notes) values ('9.9.9', 'x');
   raise exception 'FAIL: anon wrote reference data';

@@ -14,6 +14,7 @@ From Latin *viridis* (green), evoking agriculture, growth and prosperity.
 | [`docs/economic-model.md`](docs/economic-model.md) | Model v0.1 specification: equations, parameters, tests |
 | [`docs/mvp-plan.md`](docs/mvp-plan.md) | Delivery milestones M0–M7 |
 | [`.superdesign/`](.superdesign/) | Design system and Superdesign draft references |
+| [`web/`](web/) | Next.js website: home, Google sign-in, account (see [`web/README.md`](web/README.md)) |
 | [`sim/`](sim/) | `verdania-sim`: Python engine + FastAPI service |
 | [`supabase/`](supabase/) | Migrations (schema + engine-generated reference data), RLS / ledger checks. Migrations deploy to production on merge to `main`. |
 
@@ -25,6 +26,9 @@ cd sim && uv run pytest
 
 # database: all migrations (schema + reference data) + RLS + virtual ledger, on in-memory Postgres (no Docker)
 npm i -D @electric-sql/pglite && node supabase/checks/run.mjs
+
+# website: lint, redirect-safety test, production build
+cd web && npm run lint && npm test && npm run build
 
 # regenerate the reference-data migration from the engine (only before it is deployed;
 # a new model version gets a new migration)
