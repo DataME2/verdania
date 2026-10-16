@@ -15,6 +15,15 @@ export const CATEGORY: Record<string, string> = {
   public_fund: "Public investment fund",
 };
 
+export const SECTOR: Record<string, string> = {
+  agriculture: "Agriculture",
+  food_processing: "Food processing",
+  industry_energy: "Industry and energy",
+  construction: "Construction",
+  private_services: "Private services",
+  public_services: "Public services",
+};
+
 export const t = {
   brand: { name: "VERDANIA", tagline: "An open economic laboratory", home: "Verdania home" },
   nav: [
@@ -378,6 +387,78 @@ export const t = {
       "Open any saved or published scenario and press \"Re-run and verify\". The engine recomputes it and compares both fingerprints.",
       "Or run the open-source engine yourself and send it the scenario's levers and horizon: the same model version gives the same fingerprints.",
     ],
+  },
+  discover: {
+    eyebrow: "The country",
+    title: "Discover Verdania",
+    lead: "A fictional, agriculture-led country of 2,000,000 synthetic people in six regions: grain plains, a river delta, a coastal port, an industrial belt, highlands and the capital. Pick a region to see how geography shapes work, income and health.",
+    synthetic: "Synthetic data",
+    layer: "Colour the map by",
+    layers: {
+      mean_income: "Income",
+      poverty_relative: "Poverty",
+      unemployment: "Unemployment",
+      health_access: "Health access",
+      sector_share_agriculture: "Farm jobs",
+    },
+    layerTitle: {
+      mean_income: "Mean disposable income per person (equivalised)",
+      poverty_relative: "Relative poverty (below 60% of the national median)",
+      unemployment: "Unemployment rate",
+      health_access: "Health access index",
+      sector_share_agriculture: "Share of the workforce in agriculture",
+    },
+    low: "Lower",
+    high: "Higher",
+    map: "Map of Verdania. Each region is a button: choose one to see its figures.",
+    selected: (name: string) => `${name} selected. Its figures are shown next to the map.`,
+    people: "People",
+    area: "Area",
+    density: (n: string) => `${n} people per km²`,
+    national: (v: string) => `Verdania: ${v}`,
+    jobs: "Where people work",
+    jobsNote: "Share of the region's workforce, by sector.",
+    experiment: "Test a policy in the Lab",
+    table: "All six regions",
+    tableCaption: "The six regions of Verdania with their synthetic baseline figures. The table holds the same information as the map.",
+    region: "Region",
+    footnote: (version: string) =>
+      `Synthetic baseline · model v${version} · not real-world data. Every policy applies nationally today; region-level levers come in a later model version.`,
+    error: "The regional data isn't reachable right now. Nothing is shown rather than a guess.",
+  },
+  justice: {
+    eyebrow: "Social justice",
+    title: "Who gets what in Verdania?",
+    lead: "Inequality, poverty and access to health care, one measure at a time and never folded into a single score. Then the same yardstick for the four economic systems.",
+    today: "Verdania today",
+    todayLead: "The shared starting point of every experiment (year 0).",
+    explain: {
+      gini_market: "Before taxes and transfers. 0 means everyone earns the same; 1 means one person earns everything.",
+      gini_disposable: "After taxes and transfers. The gap from the market figure is what redistribution does.",
+      poverty_relative: "People living on less than 60% of the median income.",
+      wealth_top10: "Share of all household wealth owned by the richest tenth.",
+      wealth_top1: "Share of all household wealth owned by the richest hundredth.",
+      labour_share: "Share of national income paid as wages rather than profits.",
+      catastrophic_health: "People whose out-of-pocket health costs exceed 10% of their household's income.",
+      regional_ratio: "Mean income in the richest region divided by the poorest.",
+    } as Record<string, string>,
+    redistribution: "Before and after taxes and transfers",
+    redistributionLead: (year: number) =>
+      `Income per person by tenth of the population: what the market pays, and what people keep after taxes, benefits and pensions. Year ${year} with today's policies.`,
+    market: "Market income",
+    disposable: "Disposable income",
+    systems: "Four economic systems, one yardstick",
+    systemsLead: (h: number) =>
+      `Each system is a complete policy bundle that keeps its deficit within 3% of output. Figures are for year ${h}, each compared with keeping today's policies, with the range across uncertain assumptions.`,
+    keepToday: "Today's policies",
+    measure: "Measure",
+    range: "Range",
+    open: "Open in the Lab",
+    caveat:
+      "These results depend on assumptions that economists dispute, such as how unemployment responds to the minimum wage. The methodology page shows each assumption and its evidence; the Lab lets you change any policy and see the difference.",
+    gender:
+      "The gender pay gap is zero by construction in model v0.1, because women and men are modelled identically. Mechanisms that could open a gap are planned for v0.3.",
+    error: "The simulation engine isn't reachable right now. Nothing is shown rather than a guess.",
   },
   soon: {
     eyebrow: "Under construction",

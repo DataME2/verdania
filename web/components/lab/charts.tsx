@@ -73,20 +73,36 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
   );
 }
 
-/** Equivalised disposable income by decile, baseline vs scenario, at the horizon. */
-export function DecileChart({ baseline, scenario, year }: { baseline: Series; scenario: Series; year: number }) {
+/** Income by decile, two series side by side (default: disposable income, baseline vs scenario, at the horizon). */
+export function DecileChart({
+  baseline,
+  scenario,
+  year,
+  names = ["Baseline", "Your scenario"],
+  title = "Disposable income per decile",
+}: {
+  baseline: Series;
+  scenario: Series;
+  year: number;
+  names?: [string, string];
+  title?: string;
+}) {
   const vals = [...baseline, ...scenario].filter((v): v is number => v != null);
   if (!vals.length) return <p className="text-sm text-ink/70">Not available: the model stopped before this year.</p>;
   const hi = Math.max(...vals) * 1.08;
   const slot = (W - PAD.l - PAD.r) / 10;
   const y = (v: number) => PAD.t + (1 - v / hi) * (H - PAD.t - PAD.b);
   const ticks = [0, 1, 2, 3].map((k) => (hi * k) / 3);
-  const pct = (i: number) => (baseline[i] && scenario[i] ? ((scenario[i]! / baseline[i]! - 1) * 100).toFixed(1) : "—");
+  const pct = (i: number) => {
+    if (!baseline[i] || scenario[i] == null) return "—";
+    const p = (scenario[i]! / baseline[i]! - 1) * 100;
+    return `${p > 0 ? "+" : ""}${p.toFixed(1)}`;
+  };
 
   return (
     <figure>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img"
-        aria-label={`Disposable income per decile in year ${year}: poorest tenth changes ${pct(0)}%, richest tenth ${pct(9)}%.`}>
+        aria-label={`${title}, year ${year}. ${names[1]} vs ${names[0]}: poorest tenth ${pct(0)}%, richest tenth ${pct(9)}%.`}>
         {ticks.map((t) => (
           <g key={t}>
             <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="currentColor" className="text-forest/10" />
@@ -107,13 +123,13 @@ export function DecileChart({ baseline, scenario, year }: { baseline: Series; sc
         })}
       </svg>
       <figcaption className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink/70">
-        <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-forest" aria-hidden="true" /> Your scenario</span>
-        <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-ink/25" aria-hidden="true" /> Baseline</span>
+        <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-forest" aria-hidden="true" /> {names[1]}</span>
+        <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-ink/25" aria-hidden="true" /> {names[0]}</span>
         <span>D1 = poorest tenth of people, D10 = richest. Year {year}.</span>
       </figcaption>
       <DataTable
-        caption={`Disposable income per decile, year ${year}`}
-        head={["Decile", "Baseline", "Scenario", "Change"]}
+        caption={`${title}, year ${year}`}
+        head={["Decile", ...names, "Change"]}
         rows={baseline.map((b, i) => [`D${i + 1}`, fmtValue(b, "V$"), fmtValue(scenario[i], "V$"), `${pct(i)}%`])}
       />
     </figure>

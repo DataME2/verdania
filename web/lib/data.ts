@@ -172,6 +172,37 @@ export const getProjects = unstable_cache(
   { revalidate: 3600 },
 );
 
+export type Region = {
+  code: string;
+  name: string;
+  description: string;
+  population: number;
+  areaKm2: number;
+  /** Baseline indicators from the engine-generated seed: mean_income, poverty_relative, unemployment, health_access, sector_share_*. */
+  stats: Record<string, number>;
+};
+
+/** The six regions with their synthetic baseline indicators, largest population first. */
+export const getRegions = unstable_cache(
+  async (): Promise<Region[]> => {
+    const db = createPublicClient();
+    const [regions, indicators] = await Promise.all([
+      db.from("administrative_regions").select("id, code, name, description, population, area_km2").order("population", { ascending: false }),
+      db.from("economic_indicators").select("region_id, code, value").not("region_id", "is", null),
+    ]);
+    return (regions.data ?? []).map((r) => ({
+      code: r.code,
+      name: r.name,
+      description: r.description,
+      population: r.population,
+      areaKm2: Number(r.area_km2),
+      stats: Object.fromEntries((indicators.data ?? []).filter((i) => i.region_id === r.id).map((i) => [i.code, Number(i.value)])),
+    }));
+  },
+  ["regions"],
+  { revalidate: 3600 },
+);
+
 export const getCountryId = unstable_cache(
   async (): Promise<string | null> => {
     const { data } = await createPublicClient().from("country_configurations").select("id").eq("slug", "verdania").maybeSingle();

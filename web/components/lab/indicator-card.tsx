@@ -3,7 +3,7 @@ import { fmtDelta, fmtValue, tone, type Tone } from "@/lib/format";
 import type { Indicator } from "@/lib/sim-types";
 
 const TONE: Record<Tone, string> = {
-  good: "bg-vivid/20 text-leaf",
+  good: "bg-vivid/20 text-forest", // leaf on this tint is 4.2:1, below AA
   bad: "bg-loss/15 text-loss",
   neutral: "bg-forest/10 text-forest",
 };
