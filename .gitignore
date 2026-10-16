@@ -13,5 +13,7 @@ client_secret*.json
 .superdesign/tmp/
 .claude/settings.local.json
 .vercel/
+sim/build/
+sim/dist/
 supabase/.temp/
 supabase/.branches/

@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // Pages that need an account. Each page also re-checks the session itself; this is the friendly redirect.
 const PRIVATE = ["/account"];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

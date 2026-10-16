@@ -16,14 +16,14 @@ export async function createClient() {
         try {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
-          // Called from a Server Component, which cannot set cookies. proxy.ts refreshes sessions.
+          // Called from a Server Component, which cannot set cookies. middleware.ts refreshes sessions.
         }
       },
     },
   });
 }
 
-/** Session-less client for public, published data. Safe inside `use cache` (reads no cookies). */
+/** Session-less client for public, published data. Safe inside `unstable_cache` (reads no cookies). */
 export function createPublicClient() {
   return createPlainClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
