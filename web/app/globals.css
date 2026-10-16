@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Tokens from .superdesign/design-system.md */
+@theme {
+  --color-forest: #2d5016;
+  --color-leaf: #4a7c3a;
+  --color-vivid: #6db345;
+  --color-sage: #a8d5ba;
+  --color-cream: #f4f7ef;
+  --color-ink: #172015;
+  --color-sun: #e7ba55;
+  --color-deep: #1f3d14;
+  --color-deeper: #172b10;
+  --color-mist: #e4edd9;
+  --color-dawn: #dcebd2;
+  --color-loss: #b5523b;
+
+  --font-display: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-soft: 0 24px 60px rgba(45, 80, 22, 0.12);
+  --shadow-lift: 0 16px 34px rgba(45, 80, 22, 0.18);
+
+  --animate-sway: sway 4s ease-in-out infinite;
+  --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
+  --animate-flow: flow 12s linear infinite;
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-1deg); }
+    50% { transform: rotate(2deg); }
+  }
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
+  }
+  @keyframes flow {
+    0%, 100% { transform: translateX(-4%); }
+    50% { transform: translateX(4%); }
+  }
+}
+
+html {
+  background-color: var(--color-cream);
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-vivid);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-vivid);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
