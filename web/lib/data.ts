@@ -203,6 +203,33 @@ export const getRegions = unstable_cache(
   { revalidate: 3600 },
 );
 
+export type PopulationCell = { region: string; age: string; gender: string; education: string; sector: string | null; people: number };
+export type Population = { cells: PopulationCell[]; generator: string | null; seed: number | null };
+
+/** The synthetic population as counts by region × age band × gender × education × sector (engine generator output). */
+export const getPopulation = unstable_cache(
+  async (): Promise<Population> => {
+    const { data } = await createPublicClient()
+      .from("synthetic_population_profiles")
+      .select("age_band, gender, education, sector_code, person_count, generator_version, generator_seed, administrative_regions(name)");
+    const rows = data ?? [];
+    return {
+      cells: rows.map((r) => ({
+        region: (r.administrative_regions as unknown as { name: string } | null)?.name ?? "—",
+        age: r.age_band,
+        gender: r.gender,
+        education: r.education,
+        sector: r.sector_code,
+        people: Number(r.person_count),
+      })),
+      generator: rows[0]?.generator_version ?? null,
+      seed: rows[0]?.generator_seed ?? null,
+    };
+  },
+  ["population"],
+  { revalidate: 3600 },
+);
+
 export const getCountryId = unstable_cache(
   async (): Promise<string | null> => {
     const { data } = await createPublicClient().from("country_configurations").select("id").eq("slug", "verdania").maybeSingle();

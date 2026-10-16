@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, X } from "lucide-react";
 import type { Evidence, Lever, Parameter } from "@/lib/data";
 import { fmtDelta, fmtParam } from "@/lib/format";
+import { LEVER_GROUPS } from "@/lib/levers";
 import { t } from "@/lib/messages";
 import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
@@ -16,12 +17,6 @@ import { useSimulation } from "./use-simulation";
 
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
 
-const GROUPS: [keyof typeof t.experiment.groups, string[]][] = [
-  ["taxes", ["tau_top", "tau_b", "tau_c", "tau_k", "tau_cg", "tau_v"]],
-  ["work", ["bite", "cb", "rr"]],
-  ["services", ["m", "e", "ig", "gmi"]],
-  ["ownership", ["s_coop", "s_pub"]],
-];
 const CARDS = ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "unemployment", "labour_share", "debt_share"];
 const CHARTS = ["gdp_pc", "poverty_anchored", "poverty_relative", "gini_disposable", "median_income", "unemployment", "debt_share"];
 const EPS = 1e-9;
@@ -182,7 +177,7 @@ export function Lab({
             <h2 className="font-display text-xl font-semibold text-forest">{t.experiment.levers}</h2>
             <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.experiment.changed(changed)}</span>
           </div>
-          {GROUPS.map(([group, codes]) => (
+          {LEVER_GROUPS.map(([group, codes]) => (
             <fieldset key={group} className="mt-5">
               <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.experiment.groups[group]}</legend>
               <div className="mt-2 space-y-2">

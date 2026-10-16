@@ -151,7 +151,7 @@ Browser (Next.js app, TypeScript)
 | 11 | Supabase Postgres primary DB; Google sign-in | Deployed configuration; auth e2e | ✅ owner signed in on production |
 | 12 | Explore without registering | Anonymous e2e | ✅ every e2e test runs anonymously |
 | 13 | RLS + protected server operations | Checks against local and production | ✅ production: RLS on every table, no anonymous write grants, no private rows readable anonymously |
-| 14 | Accessible, responsive, motion alternatives | axe-core in CI; manual keyboard and mobile pass | ✅ axe WCAG 2.2 AA and 360 px on 9 pages (incl. Discover, Justice and a Lab with changes), mobile drawer, skip link; a full manual screen-reader pass is still worth doing before wider launch |
+| 14 | Accessible, responsive, motion alternatives | axe-core in CI; manual keyboard and mobile pass | ✅ axe WCAG 2.2 AA and 360 px on 11 pages (every page in the navigation, plus a Lab with changes), mobile drawer, skip link; a full manual screen-reader pass is still worth doing before wider launch |
 | 15 | Automated tests for auth, permissions, economics | CI pipeline covering all of the above | ✅ `.github/workflows/ci.yml`, end-to-end steps included |
 
 ## 9. Open decisions (owner: project lead)

@@ -28,3 +28,9 @@ export async function simulateFresh(request: SimRequest): Promise<SimOutcome> {
  * Outages throw and are not cached.
  */
 export const runSimulation = unstable_cache(simulateFresh, ["simulation-v2"], { revalidate: 86_400 });
+
+/** A cached run, or null when the engine is unreachable or rejects it: pages then say so, never guess. */
+export async function runOrNull(request: SimRequest): Promise<SimResult | null> {
+  const out = await runSimulation(request).catch(() => null);
+  return out?.ok ? out.data : null;
+}

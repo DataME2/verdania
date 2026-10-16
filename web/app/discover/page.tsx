@@ -43,7 +43,7 @@ export default async function DiscoverPage() {
 
             <div className="mt-8 rounded-[2rem] border border-forest/10 bg-white p-6 lg:p-8">
               <h2 id="regions-table" className="font-display text-3xl font-semibold text-forest">{d.table}</h2>
-              <div className="mt-5 overflow-x-auto" role="region" aria-labelledby="regions-table" tabIndex={0}>
+              <div className="relative mt-5 overflow-x-auto" role="region" aria-labelledby="regions-table" tabIndex={0}>
                 <table className="w-full min-w-[720px] text-left text-sm tabular-nums">
                   <caption className="sr-only">{d.tableCaption}</caption>
                   <thead>

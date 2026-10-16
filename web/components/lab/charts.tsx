@@ -140,7 +140,7 @@ function DataTable({ caption, head, rows }: { caption: string; head: string[]; r
   return (
     <details className="mt-3 text-sm">
       <summary className="cursor-pointer font-semibold text-forest">Show data table</summary>
-      <div className="mt-2 overflow-x-auto">
+      <div className="relative mt-2 overflow-x-auto">
         <table className="w-full text-left tabular-nums">
           <caption className="sr-only">{caption}</caption>
           <thead>

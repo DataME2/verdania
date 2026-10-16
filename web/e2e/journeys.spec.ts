@@ -130,6 +130,27 @@ test("Contribute: the footer link reaches the form and its server action answers
   clean();
 });
 
+test("People and Society: the synthetic population adds up to two million, by age, sex and region", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/people");
+  const ages = page.getByRole("table", { name: "People by age group and sex" });
+  const cells = await ages.locator("tbody td:nth-child(2), tbody td:nth-child(3)").allInnerTexts();
+  expect(cells.reduce((s, x) => s + Number(x.replace(/,/g, "")), 0)).toBe(2_000_000);
+  await expect(page.getByRole("table", { name: "The synthetic population of each region" }).getByRole("row")).toHaveCount(7);
+  clean();
+});
+
+test("Economic Systems: every policy compared with today, and the ten-year results from the engine", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/systems");
+  const rules = page.getByRole("table", { name: /Policy settings/ });
+  await expect(rules.getByRole("row", { name: /Top income-tax rate/ })).toContainText("higher than today");
+  const outcomes = page.getByRole("table", { name: /The economy after ten years/ });
+  await expect(outcomes.getByRole("link", { name: /Open in the Lab/ })).toHaveCount(4);
+  await expect(outcomes.getByRole("row", { name: /Public debt \(gross\)/ })).not.toContainText("—");
+  clean();
+});
+
 test("private pages send anonymous visitors to sign-in and back", async ({ page }) => {
   await page.goto("/account");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Faccount$/);
