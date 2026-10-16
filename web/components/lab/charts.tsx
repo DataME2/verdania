@@ -20,7 +20,7 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
   const all = [...indicator.baseline, ...indicator.scenario, ...indicator.p10, ...indicator.p90].filter(
     (v): v is number => v != null && Number.isFinite(v),
   );
-  if (!all.length) return <p className="text-sm text-ink/60">No data for this indicator.</p>;
+  if (!all.length) return <p className="text-sm text-ink/70">No data for this indicator.</p>;
   const { lo, hi } = scale(all);
   const x = (i: number) => PAD.l + (i / Math.max(1, years.length - 1)) * (W - PAD.l - PAD.r);
   const y = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
@@ -53,7 +53,7 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
           ) : null,
         )}
         {band && <path d={band} className="fill-sun/30" />}
-        <path d={line(indicator.baseline)} fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="6 5" className="text-ink/45" />
+        <path d={line(indicator.baseline)} fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="6 5" className="text-ink/70" />
         <path d={line(indicator.scenario)} fill="none" stroke="currentColor" strokeWidth="3" className="text-forest" />
       </svg>
       <figcaption className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink/70">
@@ -76,7 +76,7 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
 /** Equivalised disposable income by decile, baseline vs scenario, at the horizon. */
 export function DecileChart({ baseline, scenario, year }: { baseline: Series; scenario: Series; year: number }) {
   const vals = [...baseline, ...scenario].filter((v): v is number => v != null);
-  if (!vals.length) return <p className="text-sm text-ink/60">Not available: the model stopped before this year.</p>;
+  if (!vals.length) return <p className="text-sm text-ink/70">Not available: the model stopped before this year.</p>;
   const hi = Math.max(...vals) * 1.08;
   const slot = (W - PAD.l - PAD.r) / 10;
   const y = (v: number) => PAD.t + (1 - v / hi) * (H - PAD.t - PAD.b);

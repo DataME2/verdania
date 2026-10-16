@@ -30,7 +30,7 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
         <Suspense fallback={<GoogleButton next="/" />}>
           <SignInForm searchParams={searchParams} />
         </Suspense>
-        <p className="mt-3 text-center text-xs text-ink/60">{t.signIn.consent}</p>
+        <p className="mt-3 text-center text-xs text-ink/70">{t.signIn.consent}</p>
         <Link href="/" className="mt-6 block text-center text-sm font-semibold text-forest hover:text-leaf">
           {t.signIn.noAccount}
         </Link>

@@ -57,6 +57,49 @@ export const getLevers = unstable_cache(
   { revalidate: 3600 },
 );
 
+export type Evidence = "empirical-range" | "contested" | "theoretical" | "synthetic";
+export type Parameter = Lever & { kind: "lever" | "structural"; evidence: Evidence; source: string | null };
+export type ModelVersion = { version: string; releasedAt: string; isCurrent: boolean; notes: string };
+export type Methodology = { parameters: Parameter[]; versions: ModelVersion[]; empiricalRows: number };
+
+/** The parameter registry and version history, read from the database so the page can't drift from the model. */
+export const getMethodology = unstable_cache(
+  async (modelVersion: string): Promise<Methodology> => {
+    const db = createPublicClient();
+    const [params, versions, empirical] = await Promise.all([
+      db
+        .from("simulation_parameters")
+        .select("code, label, kind, unit, min_value, max_value, default_value, evidence, source")
+        .eq("model_version", modelVersion)
+        .order("id"),
+      db.from("model_versions").select("version, released_at, is_current, notes").order("released_at", { ascending: false }),
+      db.from("economic_indicators").select("id", { count: "exact", head: true }).neq("data_kind", "synthetic"),
+    ]);
+    return {
+      parameters: (params.data ?? []).map((p) => ({
+        code: p.code,
+        label: p.label,
+        kind: p.kind,
+        unit: p.unit,
+        min: Number(p.min_value),
+        max: Number(p.max_value),
+        base: Number(p.default_value),
+        evidence: p.evidence,
+        source: p.source,
+      })),
+      versions: (versions.data ?? []).map((v) => ({
+        version: v.version,
+        releasedAt: v.released_at,
+        isCurrent: v.is_current,
+        notes: v.notes,
+      })),
+      empiricalRows: empirical.count ?? 0,
+    };
+  },
+  ["methodology"],
+  { revalidate: 3600 },
+);
+
 export type ProjectTotal = { projectId: string; category: string; participants: number; units: number };
 
 /** Participants' virtual allocations, public aggregate only: projects with fewer than 5 participants are absent. */

@@ -24,7 +24,7 @@ export default async function ExperimentPage() {
         <h1 className="mt-3 font-display text-5xl font-semibold tracking-tight text-forest">{t.experiment.title}</h1>
         <div className="mt-10">
           {levers.length && presets.length ? (
-            <Suspense fallback={<p className="text-ink/60">{t.lab.recalculating}</p>}>
+            <Suspense fallback={<p className="text-ink/70">{t.lab.recalculating}</p>}>
               <Lab levers={levers} presets={presets} signedIn={!!viewer} />
             </Suspense>
           ) : (

@@ -78,7 +78,7 @@ export default async function Home() {
                   <Wheat className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <span className="block text-xs font-bold uppercase tracking-wider text-ink/50">Economy</span>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-ink/70">Economy</span>
                   <strong className="text-forest">Agriculture-led</strong>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export default async function Home() {
               );
             })}
           </ul>
-          <p className="mt-6 text-xs text-ink/60">{t.about.environment}</p>
+          <p className="mt-6 text-xs text-ink/70">{t.about.environment}</p>
         </div>
       </section>
 
@@ -141,7 +141,7 @@ export default async function Home() {
             <Reveal key={label as string} delay={i * 0.05} className="flex flex-col-reverse">
               <dt className="mt-1 text-sm font-semibold text-ink/70">
                 {label as string}
-                <span className="mt-1 block text-[11px] font-normal text-ink/50">{t.stats.source(version)}</span>
+                <span className="mt-1 block text-[11px] font-normal text-ink/70">{t.stats.source(version)}</span>
               </dt>
               <dd className="font-display text-4xl font-semibold text-forest">
                 <Counter value={value as number | null} format={format as "int" | "pct" | "money"} />
@@ -201,7 +201,7 @@ export default async function Home() {
               </Reveal>
             ))}
           </div>
-          <p className="mt-6 text-sm text-ink/60">{t.systems.note}</p>
+          <p className="mt-6 text-sm text-ink/70">{t.systems.note}</p>
         </div>
       </section>
 

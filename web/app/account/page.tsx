@@ -16,7 +16,7 @@ export default function AccountPage() {
     <section className="px-5 py-20">
       <div className="mx-auto max-w-3xl space-y-6">
         <h1 className="font-display text-4xl font-semibold tracking-tight text-forest">{t.account.title}</h1>
-        <Suspense fallback={<p className="text-ink/60">Loading…</p>}>
+        <Suspense fallback={<p className="text-ink/70">Loading…</p>}>
           <Account />
         </Suspense>
       </div>

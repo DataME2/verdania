@@ -30,7 +30,7 @@ export function LeverSlider({ lever, value, onChange }: { lever: Lever; value: n
         className="mt-2 w-full accent-forest"
         aria-describedby={`${id}-base`}
       />
-      <div id={`${id}-base`} className="mt-1 flex items-center justify-between text-[11px] text-ink/60">
+      <div id={`${id}-base`} className="mt-1 flex items-center justify-between text-[11px] text-ink/70">
         <span>
           {fmtLever(lever.min, null)} – {fmtLever(lever.max, null)} · Verdania today {fmtLever(lever.base, null)}
         </span>

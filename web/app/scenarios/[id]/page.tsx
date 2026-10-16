@@ -88,7 +88,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
             <p className="mt-4 rounded-2xl bg-loss/10 p-5 text-sm font-semibold text-loss">{t.lab.error}</p>
           )}
           {result && (
-            <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-ink/60">
+            <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-ink/70">
               {result.assumptions.map((a) => <li key={a}>{a}</li>)}
             </ul>
           )}
@@ -96,7 +96,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
 
         <section className="rounded-[2rem] border border-forest/10 bg-cream p-6" aria-labelledby="repro-title">
           <h2 id="repro-title" className="font-display text-xl font-semibold text-forest">{t.scenarios.verify}</h2>
-          <p className="mt-1 break-all text-xs text-ink/60">
+          <p className="mt-1 break-all text-xs text-ink/70">
             {t.scenarios.fingerprint}: <code>{scenario.outputHash ?? "—"}</code>
           </p>
           <div className="mt-4">

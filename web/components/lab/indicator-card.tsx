@@ -38,9 +38,9 @@ export function IndicatorCard({ indicator, year, loading }: { indicator?: Indica
       <p className="mt-1 font-display text-3xl font-semibold tabular-nums text-forest">{fmtValue(value, unit)}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <DeltaChip delta={delta} unit={unit} desirable={desirable} />
-        <span className="text-[11px] text-ink/60">vs baseline</span>
+        <span className="text-[11px] text-ink/70">vs baseline</span>
       </div>
-      <p className="mt-2 text-[11px] text-ink/60">
+      <p className="mt-2 text-[11px] text-ink/70">
         Across assumptions (P10–P90): {fmtDelta(indicator.delta_p10[year], unit)} to {fmtDelta(indicator.delta_p90[year], unit)}
       </p>
     </div>

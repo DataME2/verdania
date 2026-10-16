@@ -46,6 +46,7 @@ Today, environmental effects come from each investment project's own notes; a la
 | [`.superdesign/`](.superdesign/) | Design system and Superdesign draft references |
 | [`web/`](web/) | Next.js website (see [`web/README.md`](web/README.md)) |
 | [`sim/`](sim/) | `verdania-sim`: Python engine + FastAPI service |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | All of the checks below, on every pull request |
 | [`supabase/`](supabase/) | Migrations (schema + engine-generated reference data), RLS / ledger checks. Migrations deploy to production on merge to `main`. |
 
 ```bash
@@ -55,8 +56,8 @@ cd sim && uv run pytest
 # database: all migrations (schema + reference data) + RLS + virtual ledger, on in-memory Postgres (no Docker)
 npm i -D @electric-sql/pglite && node supabase/checks/run.mjs
 
-# website: lint, unit tests, production build
-cd web && npm run lint && npm test && npm run build
+# website: lint, unit tests, production build, then end-to-end + accessibility + mobile (site and engine running)
+cd web && npm run lint && npm test && npm run build && npm run e2e
 
 # regenerate the reference-data migration from the engine (only before it is deployed;
 # a new model version gets a new migration)
