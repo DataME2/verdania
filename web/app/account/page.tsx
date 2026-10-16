@@ -21,7 +21,7 @@ export default function AccountPage() {
 }
 
 async function Account() {
-  // The page checks the session itself; proxy.ts only provides the friendly redirect.
+  // The page checks the session itself; middleware.ts only provides the friendly redirect.
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/account");
   return (
