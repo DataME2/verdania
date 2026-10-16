@@ -11,6 +11,7 @@ import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
 import { IndicatorCard } from "./indicator-card";
 import { LeverSlider } from "./lever-slider";
+import { SaveScenario } from "./save-scenario";
 import { useSimulation } from "./use-simulation";
 
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
@@ -54,20 +55,21 @@ function toUrl(s: State, presets: PresetOption[]) {
   return q.toString();
 }
 
-export function Lab({ levers, presets }: { levers: Lever[]; presets: PresetOption[] }) {
+export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: PresetOption[]; signedIn: boolean }) {
   const params = useSearchParams();
   const byCode = useMemo(() => Object.fromEntries(levers.map((l) => [l.code, l])), [levers]);
   const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers));
   const [chart, setChart] = useState("gdp_pc");
 
-  const sim = useSimulation({ preset: s.preset, levers: { ...s.values, closure: s.closure }, horizon: s.horizon }, 400);
+  const request: SimRequest = { preset: s.preset, levers: { ...s.values, closure: s.closure }, horizon: s.horizon };
+  const sim = useSimulation(request, 400);
+  const query = toUrl(s, presets);
   const changed = levers.filter((l) => Math.abs(s.values[l.code] - l.base) > EPS).length + (s.closure !== "borrow" ? 1 : 0);
 
   // Shareable state without a navigation: the URL always describes the scenario on screen.
   useEffect(() => {
-    const q = toUrl(s, presets);
-    window.history.replaceState(null, "", q ? `?${q}` : window.location.pathname);
-  }, [s, presets]);
+    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+  }, [query]);
 
   const set = (patch: Partial<State>) => setS((prev) => ({ ...prev, ...patch }));
   const applyPreset = (p: PresetOption) =>
@@ -190,6 +192,8 @@ export function Lab({ levers, presets }: { levers: Lever[]; presets: PresetOptio
             {loading ? t.lab.recalculating : data ? `Model v${data.model_version} · ${data.uncertainty.draws} draws · not a forecast` : ""}
           </p>
         </div>
+
+        <SaveScenario request={request} signedIn={signedIn} next={`/experiment${query ? `?${query}` : ""}`} />
 
         {sim.status === "error" && (
           <p role="alert" className="rounded-2xl bg-loss/10 p-5 text-sm font-semibold text-loss">{sim.error || t.lab.error}</p>

@@ -1,6 +1,21 @@
 # Verdania
 
-*Can an economy serve humanity?* A public economic-simulation lab about a fictional, agriculture-led country of 2,000,000 synthetic citizens. A project of **Let's the Data Talk**.
+*Can an economy serve humanity?* A project of **Let's the Data Talk** · live at [verdania.datamanagementengineer.com](https://verdania.datamanagementengineer.com)
+
+## What is Verdania?
+
+Verdania is much more than an educational website: it presents an interactive economic laboratory where people can experiment with economic models, public policies and virtual investment, and observe their consequences on prosperity, inequality and the environment.
+
+It is a fictional, agriculture-led country of 2,000,000 synthetic people. Visitors can:
+
+- **Run experiments.** Change taxes, wages, public services and who owns capital, then see what a transparent simulation engine calculates for growth, incomes, poverty, inequality and public debt, with uncertainty ranges and the reasons behind every change.
+- **Compare economic systems.** Four editable models range from market-led capitalism to collective ownership. A label never changes an equation; only the policies do.
+- **Invest virtual capital.** Every account receives 100,000 virtual units to allocate across Verdania's projects. Each project's private financial return is shown separately from its social and environmental effects.
+- **Save, publish and reproduce.** Saved scenarios carry their exact inputs and a fingerprint of their results, so anyone can re-run one and check that it reproduces exactly.
+
+The research question behind it: can an economy keep the benefits of markets and private investment while making prosperity serve everyone? Verdania doesn't answer that for you. It lets you test it, with every assumption visible.
+
+Today, environmental effects come from each investment project's notes; the simulation itself models them in a later version (see [`docs/economic-model.md`](docs/economic-model.md)).
 
 From Latin *viridis* (green), evoking agriculture, growth and prosperity.
 

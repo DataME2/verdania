@@ -54,6 +54,11 @@ body {
   color: white;
 }
 
+/* In-page links (#lab, #about-title) land below the sticky header, not under it. */
+:target {
+  scroll-margin-top: 6rem;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-vivid);
   outline-offset: 2px;

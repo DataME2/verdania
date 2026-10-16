@@ -35,7 +35,8 @@ EXISTING_KEY=$(aws_ lambda get-function-configuration --function-name "$FUNCTION
 if [[ -n "$EXISTING_KEY" && "$EXISTING_KEY" != "None" && "${ROTATE_KEY:-0}" != "1" ]]; then KEY="$EXISTING_KEY"
 else KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))"); fi
 ENV_FILE=$(mktemp); trap 'rm -f "$ENV_FILE"' EXIT
-python -c "import json,sys; print(json.dumps({'Variables': {'SIM_API_KEY': sys.argv[1]}}))" "$KEY" > "$ENV_FILE"
+GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)  # recorded in every run's engine_git_sha
+python -c "import json,sys; print(json.dumps({'Variables': {'SIM_API_KEY': sys.argv[1], 'ENGINE_GIT_SHA': sys.argv[2]}}))" "$KEY" "$GIT_SHA" > "$ENV_FILE"
 printf '%s' "$KEY" > "$KEY_FILE"
 ENV_PATH=$(cygpath -w "$ENV_FILE" 2>/dev/null || echo "$ENV_FILE")  # aws.exe on Windows needs a Windows path
 

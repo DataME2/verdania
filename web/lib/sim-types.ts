@@ -16,7 +16,9 @@ export type Indicator = {
 
 export type SimResult = {
   model_version: string;
+  engine_git_sha: string;
   input_hash: string;
+  output_hash: string;
   inputs: { levers: Record<string, number | string>; horizon: number };
   years: number[];
   indicators: Record<string, Indicator>;

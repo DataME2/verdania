@@ -143,6 +143,21 @@ do $$ begin
 exception when insufficient_privilege then null; end $$;
 select test.ok((select count(*) from public.simulation_scenarios) = 2, 'owner sees both scenarios');
 select test.ok((select published_at is not null from public.simulation_scenarios where title = 'Ana public'), 'publish stamped');
+insert into public.simulation_scenarios (country_id, title, levers, horizon, model_version, input_hash, output_hash)
+values ('00000000-0000-0000-0002-000000000001', 'Ana hashed', '{}', 10, '0.1.0', repeat('a', 64), repeat('b', 64));
+do $$ begin
+  update public.simulation_scenarios set levers = '{"tau_top": 0.7}' where title = 'Ana hashed';
+  raise exception 'FAIL: saved scenario inputs were editable';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  insert into public.simulation_scenarios (country_id, title, levers, horizon, model_version, output_hash)
+  values ('00000000-0000-0000-0002-000000000001', 'bad hash', '{}', 10, '0.1.0', 'not-a-hash');
+  raise exception 'FAIL: accepted a malformed fingerprint';
+exception when check_violation then null; end $$;
+update public.simulation_scenarios set title = 'Ana hashed (renamed)', visibility = 'public' where title = 'Ana hashed';
+select test.ok((select published_at is not null from public.simulation_scenarios where title = 'Ana hashed (renamed)'),
+               'title and visibility stay editable');
+delete from public.simulation_scenarios where title = 'Ana hashed (renamed)';
 
 -- ------------------------------------------------------------ Ben: isolation
 select test.as_user(2);

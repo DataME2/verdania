@@ -107,6 +107,9 @@ def test_run_is_reproducible():
     assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
     assert a["input_hash"] != engine.run(preset="C", horizon=5, levers={"bite": 0.6}, mc_seed=8)["input_hash"]
     assert a["accounting_checks"]["passed"]
+    # the output fingerprint matches the payload and changes when any result changes
+    assert a["output_hash"] == engine.output_hash(a)
+    assert a["output_hash"] != engine.run(preset="C", horizon=5, levers={"bite": 0.61})["output_hash"]
 
 
 def test_run_payload_shape():
