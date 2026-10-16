@@ -13,7 +13,7 @@
   --color-deeper: #172b10;
   --color-mist: #e4edd9;
   --color-dawn: #dcebd2;
-  --color-loss: #b5523b;
+  --color-loss: #a14532; /* the design's #b5523b, darkened to pass 4.5:1 on its own 15% tint */
 
   --font-display: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;

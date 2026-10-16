@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 // WCAG 2.2 AA (axe) on every public page, and no sideways scrolling at 360 px (PRD §6).
-const PAGES = ["/", "/experiment", "/market", "/methodology", "/community", "/sign-in", "/discover"];
+const PAGES = ["/", "/experiment", "/market", "/methodology", "/community", "/sign-in", "/discover", "/justice"];
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const path of PAGES) {

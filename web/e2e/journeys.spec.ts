@@ -72,6 +72,32 @@ test("J5: the methodology page renders the parameter registry", async ({ page })
   clean();
 });
 
+test("Discover: a region chosen by keyboard fills the panel; the map recolours by layer", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/discover");
+  const campovera = page.getByRole("button", { name: /^Campovera:/ });
+  await campovera.focus();
+  await page.keyboard.press("Enter");
+  await expect(campovera).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("heading", { level: 2, name: "Campovera" })).toBeVisible();
+  const before = await campovera.getAttribute("fill");
+  await page.getByRole("button", { name: "Farm jobs" }).click();
+  await expect(campovera).not.toHaveAttribute("fill", before!);
+  await expect(page.getByRole("table", { name: /six regions/ }).getByRole("row")).toHaveCount(7);
+  clean();
+});
+
+test("Justice: today's measures, redistribution and the four systems come from the engine", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/justice");
+  await expect(page.getByText("Inequality of disposable income (Gini)").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Before and after taxes and transfers" })).toBeVisible();
+  const systems = page.getByRole("table", { name: /Four economic systems/ });
+  await expect(systems.getByRole("link", { name: /Open in the Lab/ })).toHaveCount(4);
+  await expect(systems.getByRole("row", { name: /Anchored poverty/ })).not.toContainText("—");
+  clean();
+});
+
 test("private pages send anonymous visitors to sign-in and back", async ({ page }) => {
   await page.goto("/account");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Faccount$/);

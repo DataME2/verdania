@@ -34,7 +34,7 @@ Discover Verdania · People and Society · Economic Systems · Virtual Investmen
 | deep   | `#1f3d14` | Dark section background |
 | mist   | `#dcebd2` / `#e4edd9` | Light section backgrounds |
 
-Negative deltas use a muted terracotta `#b5523b` (sparingly, text + icon, never colour alone).
+Negative deltas use a muted terracotta `#a14532` (darkened from `#b5523b` for AA contrast on its tint) (sparingly, text + icon, never colour alone).
 
 ## Typography
 
