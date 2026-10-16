@@ -32,6 +32,27 @@ export async function getBaseline(): Promise<Baseline | null> {
   };
 }
 
+export type Lever = { code: string; label: string; unit: string | null; min: number; max: number; base: number };
+
+/** Policy levers from the engine-generated parameter registry, so sliders can't drift from the model. */
+export async function getLevers(modelVersion: string): Promise<Lever[]> {
+  "use cache";
+  cacheLife("hours");
+  const { data } = await createPublicClient()
+    .from("simulation_parameters")
+    .select("code, label, unit, min_value, max_value, default_value")
+    .eq("kind", "lever")
+    .eq("model_version", modelVersion);
+  return (data ?? []).map((p) => ({
+    code: p.code,
+    label: p.label,
+    unit: p.unit,
+    min: Number(p.min_value),
+    max: Number(p.max_value),
+    base: Number(p.default_value),
+  }));
+}
+
 /** Total virtual units allocated by participants (public aggregate only). */
 export async function getAllocatedTotal(): Promise<number> {
   "use cache";

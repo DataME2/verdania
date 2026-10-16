@@ -2,18 +2,21 @@ import Link from "next/link";
 import { ArrowUpRight, Compass, Database, FlaskConical, Wallet, Wheat } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";
 import { Landscape } from "@/components/landscape";
+import { MiniLab } from "@/components/mini-lab";
 import { Counter, Reveal } from "@/components/motion";
-import { getAllocatedTotal, getBaseline, type Preset } from "@/lib/data";
+import { getAllocatedTotal, getBaseline, getLevers, type Lever, type Preset } from "@/lib/data";
 import { t } from "@/lib/messages";
 
 const SYSTEM_ORDER = ["model-a", "model-b", "model-c", "model-d"];
+const MINI_LEVERS = ["tau_top", "bite", "m"];
 const pct = (v: number | string | undefined) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
 
 export default async function Home() {
   const [baseline, allocated] = await Promise.all([getBaseline(), getAllocatedTotal()]);
   const ind = baseline?.indicators ?? {};
   const version = baseline?.modelVersion ?? "0.1.0";
-  const today = baseline?.presets.find((p) => p.slug === "baseline");
+  const levers = await getLevers(version);
+  const miniLevers = MINI_LEVERS.map((c) => levers.find((l) => l.code === c)).filter(Boolean) as Lever[];
   const systems = SYSTEM_ORDER.map((s) => baseline?.presets.find((p) => p.slug === s)).filter(Boolean) as Preset[];
 
   return (
@@ -115,7 +118,7 @@ export default async function Home() {
         </dl>
       </section>
 
-      {/* ---------------------------------------------------------------- mini-lab preview (no results until the engine is wired) */}
+      {/* ---------------------------------------------------------------- live mini-experiment (engine results only) */}
       <section id="lab" className="bg-mist px-5 py-24 lg:px-10 lg:py-32">
         <div className="mx-auto max-w-[1240px]">
           <Reveal className="mx-auto max-w-2xl text-center">
@@ -123,31 +126,13 @@ export default async function Home() {
             <h2 className="mt-4 font-display text-4xl font-semibold tracking-tight text-forest lg:text-6xl">{t.lab.title}</h2>
             <p className="mt-4 text-ink/70">{t.lab.lead}</p>
           </Reveal>
-          <Reveal className="mx-auto mt-12 max-w-3xl rounded-[2rem] bg-white p-6 shadow-soft sm:p-8">
-            <dl className="grid gap-6 sm:grid-cols-3">
-              {[
-                ["Top income-tax rate", today?.levers.tau_top],
-                ["Minimum wage (share of median wage)", today?.levers.bite],
-                ["Public health spending (share of output)", today?.levers.m],
-              ].map(([label, v]) => (
-                <div key={label as string}>
-                  <dt className="text-sm font-semibold text-ink/70">{label as string}</dt>
-                  <dd className="mt-1 font-display text-3xl font-semibold text-forest">
-                    {typeof v === "number" ? (v < 0.1 ? `${(v * 100).toFixed(1)}%` : `${Math.round(v * 100)}%`) : "—"}
-                  </dd>
-                  <dd className="text-[11px] text-ink/50">Verdania today</dd>
-                </div>
-              ))}
-            </dl>
-            <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-forest/10 pt-6 sm:flex-row sm:items-center">
-              <span className="inline-flex items-center gap-2 rounded-full bg-sun/25 px-3 py-1.5 text-xs font-bold text-forest">
-                {t.lab.soon}
-              </span>
-              <Link href="/experiment" className="inline-flex items-center gap-2 font-bold text-forest hover:text-leaf">
-                {t.lab.open} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-          </Reveal>
+          <div className="mt-12">
+            {miniLevers.length === MINI_LEVERS.length ? (
+              <MiniLab levers={miniLevers} />
+            ) : (
+              <p className="text-center text-ink/70">{t.lab.error}</p>
+            )}
+          </div>
         </div>
       </section>
 
