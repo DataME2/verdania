@@ -1,9 +1,11 @@
 -- RLS + virtual-ledger checks. Any failure raises and aborts the run.
+-- Runs after the reference-data migration; fixtures live in a separate 'testland' country
+-- so counts below never depend on the real Verdania data.
 -- Users: 1 = Ana, 2 = Ben, 3 = admin, 4..8 = extra participants.
 
-create schema test;
+create schema if not exists test;
 grant usage on schema test to anon, authenticated;
-create function test.ok(cond boolean, label text) returns void language plpgsql as $$
+create or replace function test.ok(cond boolean, label text) returns void language plpgsql as $$
 begin
   if not coalesce(cond, false) then raise exception 'FAIL: %', label; end if;
 end $$;
@@ -20,9 +22,8 @@ end $$;
 grant execute on all functions in schema test to anon, authenticated;
 
 -- ------------------------------------------------------------ fixtures (service side)
-insert into public.model_versions (version, is_current, notes) values ('0.1.0', true, 'checks');
 insert into public.country_configurations (id, slug, name, population, base_year, model_version, config, is_published)
-values ('00000000-0000-0000-0002-000000000001', 'verdania', 'Verdania', 2000000, 2026, '0.1.0',
+values ('00000000-0000-0000-0002-000000000001', 'testland', 'Testland', 1000, 2026, '0.1.0',
         '{"virtual_grant_units": 100000}', true);
 insert into public.investment_projects (id, country_id, slug, title, summary, category, funding_target,
   private_return_low, private_return_central, private_return_high, jobs_per_million,
@@ -44,8 +45,9 @@ select test.ok((select bool_and(not is_public) from public.profiles), 'profiles 
 -- ------------------------------------------------------------ anonymous visitor
 set role anon;
 select test.as_user(null);
-select test.ok((select count(*) from public.investment_projects) = 6, 'anon reads only published projects');
-select test.ok((select count(*) from public.country_configurations) = 1, 'anon reads the published country');
+select test.ok((select count(*) from public.investment_projects
+                where country_id = '00000000-0000-0000-0002-000000000001') = 6, 'anon reads only published projects');
+select test.ok(exists (select 1 from public.country_configurations where slug = 'testland'), 'anon reads a published country');
 select test.ok((select count(*) from public.profiles) = 0, 'anon reads no profiles');
 select test.ok((select count(*) from public.public_profiles) = 0, 'no public profiles yet');
 do $$ begin
