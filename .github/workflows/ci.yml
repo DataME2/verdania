@@ -41,8 +41,9 @@ jobs:
     env:
       # Public values (the publishable key is meant for browsers). Kept as repository variables so that
       # pull requests from forks, which don't receive them, skip the end-to-end steps instead of failing.
-      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      # Without them the build still runs against an address that refuses connections (pages show "—").
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321' }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'not-set' }}
       SITE_URL: http://localhost:3000
       SIM_URL: http://127.0.0.1:8000
       SIM_API_KEY: ci-only-engine-key
