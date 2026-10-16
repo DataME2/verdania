@@ -1,3 +1,6 @@
+/** Short-lived cookie carrying the post-sign-in destination from the sign-in action to /auth/callback. */
+export const NEXT_COOKIE = "verdania_next";
+
 /**
  * Where to send someone after sign-in. Only same-site relative paths are allowed, so a crafted
  * `?next=` link can never bounce a freshly signed-in visitor to another site.
