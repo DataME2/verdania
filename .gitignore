@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+!.env.example
+# OAuth credentials downloaded from Google Cloud: never commit
+client_secret*.json
+*.apps.googleusercontent.com.json
+.superdesign/tmp/
+.claude/settings.local.json
+.vercel/
+supabase/.temp/
+supabase/.branches/

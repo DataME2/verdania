@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/": {
+      "targetKind": "new-target",
+      "projectId": "06c8300d-b60d-4fc5-813c-2b2011cb0970",
+      "activeDraftId": "dd9dd0db-61bc-4fc1-9cd8-22533f3ed5e1",
+      "sourceDraftId": "5b023d7f-8a11-4162-a2fa-5236f152167c",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [".superdesign/design-system.md"],
+      "fingerprints": { ".superdesign/design-system.md": "658a7da25f8537bc9bdab1356e0c1ead60ba7485be9017e1785d4c440acb8d50" },
+      "drafts": { "dd9dd0db-61bc-4fc1-9cd8-22533f3ed5e1": "Home v1: 8-item nav, hero landscape, counters, live mini-experiment, field-to-factory story, flow diagram, region map, models A-D" },
+      "model": "claude-opus-4-8"
+    },
+    "/discover": {
+      "targetKind": "new-target",
+      "projectId": "06c8300d-b60d-4fc5-813c-2b2011cb0970",
+      "activeDraftId": "0c8d8f91-fb0d-4aff-9814-2e539b4f6ee0",
+      "sourceDraftId": "5b023d7f-8a11-4162-a2fa-5236f152167c",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [".superdesign/design-system.md"],
+      "fingerprints": { ".superdesign/design-system.md": "658a7da25f8537bc9bdab1356e0c1ead60ba7485be9017e1785d4c440acb8d50" },
+      "drafts": { "0c8d8f91-fb0d-4aff-9814-2e539b4f6ee0": "Discover v1: 6-region SVG map, layer toggle, region panel, compare tray, table alternative" },
+      "model": "claude-opus-4-8"
+    },
+    "/experiment": {
+      "targetKind": "new-target",
+      "projectId": "06c8300d-b60d-4fc5-813c-2b2011cb0970",
+      "activeDraftId": "c63a3502-ef60-4395-a5d4-073045b19605",
+      "sourceDraftId": "5b023d7f-8a11-4162-a2fa-5236f152167c",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [".superdesign/design-system.md"],
+      "fingerprints": { ".superdesign/design-system.md": "658a7da25f8537bc9bdab1356e0c1ead60ba7485be9017e1785d4c440acb8d50" },
+      "drafts": { "c63a3502-ef60-4395-a5d4-073045b19605": "Lab v1: challenge cards, model A-D toolbar, grouped levers, results grid, uncertainty chart, deciles, mechanisms, assumptions" },
+      "model": "claude-opus-4-8"
+    }
+  }
+}
