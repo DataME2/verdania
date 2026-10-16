@@ -247,7 +247,15 @@ def run(**kwargs) -> dict:
     }
     if inputs["mode"] == "full":
         result["sensitivity"] = _sensitivity(small, lev, fixed, horizon)
+    result["output_hash"] = output_hash(result)
     return result
+
+
+def output_hash(result: dict) -> str:
+    """Fingerprint of everything a run reports, except which build produced it. Re-running a saved
+    scenario on the same model version and platform must give the same value."""
+    body = {k: v for k, v in result.items() if k not in ("engine_git_sha", "output_hash")}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def _detail_deciles(d):

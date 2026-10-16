@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Verdania: Can an economy serve humanity?", template: "%s · Verdania" },
   description:
-    "A fictional country of 2,000,000 synthetic citizens and an open economic-simulation lab. Synthetic data, virtual capital, model outputs, not forecasts.",
+    "An interactive economic laboratory: experiment with economic models, public policies and virtual investment in Verdania, a fictional country of 2,000,000 synthetic people.",
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
 };
 

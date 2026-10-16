@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Compass, Database, FlaskConical, Wallet, Wheat } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Compass, Database, FlaskConical, Scale, Wallet, Wheat } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";
 import { Landscape } from "@/components/landscape";
 import { MiniLab } from "@/components/mini-lab";
@@ -93,6 +93,39 @@ export default async function Home() {
           <p className="animate-flow whitespace-nowrap text-center text-xs font-bold uppercase tracking-[.2em] text-sage">
             {t.hero.ticker}
           </p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- what is Verdania? (context for newcomers) */}
+      <section className="bg-white px-5 py-20 lg:px-10 lg:py-28" aria-labelledby="about-title">
+        <div className="mx-auto max-w-[1240px]">
+          <Reveal className="max-w-3xl">
+            <span className="text-xs font-bold uppercase tracking-[.25em] text-leaf">{t.about.eyebrow}</span>
+            <h2 id="about-title" className="mt-4 font-display text-4xl font-semibold tracking-tight text-forest lg:text-5xl">
+              {t.about.title}
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-ink/80">{t.about.lead}</p>
+            <p className="mt-3 text-ink/70">{t.about.country}</p>
+          </Reveal>
+          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {t.about.tiles.map((tile, i) => {
+              const Icon = [FlaskConical, Scale, Wallet, BadgeCheck][i];
+              return (
+                <li key={tile.title} className="h-full">
+                  <Reveal delay={i * 0.05} className="h-full">
+                    <Link href={tile.href} className="flex h-full flex-col rounded-[2rem] border border-forest/10 bg-cream p-6 transition hover:-translate-y-0.5 hover:border-forest/30">
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-forest text-white">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <h3 className="mt-4 font-display text-xl font-semibold text-forest">{tile.title}</h3>
+                      <p className="mt-2 text-sm text-ink/70">{tile.text}</p>
+                    </Link>
+                  </Reveal>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-6 text-xs text-ink/60">{t.about.environment}</p>
         </div>
       </section>
 

@@ -57,12 +57,128 @@ export const getLevers = unstable_cache(
   { revalidate: 3600 },
 );
 
-/** Total virtual units allocated by participants (public aggregate only). */
-export const getAllocatedTotal = unstable_cache(
-  async (): Promise<number> => {
+export type ProjectTotal = { projectId: string; category: string; participants: number; units: number };
+
+/** Participants' virtual allocations, public aggregate only: projects with fewer than 5 participants are absent. */
+export const getPublicTotals = unstable_cache(
+  async (): Promise<ProjectTotal[]> => {
     const { data } = await createPublicClient().rpc("public_allocation_totals");
-    return (data ?? []).reduce((sum: number, row: { units: number }) => sum + Number(row.units), 0);
+    return (data ?? []).map((r: { project_id: string; category: string; participants: number; units: number }) => ({
+      projectId: r.project_id,
+      category: r.category,
+      participants: Number(r.participants),
+      units: Number(r.units),
+    }));
   },
-  ["allocated-total"],
+  ["public-totals"],
   { revalidate: 60 },
 );
+
+export async function getAllocatedTotal(): Promise<number> {
+  return (await getPublicTotals()).reduce((sum, r) => sum + r.units, 0);
+}
+
+export type Project = {
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  region: string | null;
+  fundingTarget: number;
+  publicContribution: number;
+  returnLow: number;
+  returnCentral: number;
+  returnHigh: number;
+  jobsPerMillion: number;
+  socialNote: string;
+  environmentalNote: string;
+  risk: "low" | "medium" | "high";
+  years: number;
+  assumptions: string[];
+};
+
+/** Published investment projects (synthetic). Figures are project assumptions, not model outputs. */
+export const getProjects = unstable_cache(
+  async (): Promise<Project[]> => {
+    const { data } = await createPublicClient()
+      .from("investment_projects")
+      .select(
+        "id, title, summary, category, funding_target, public_contribution, private_return_low, private_return_central, private_return_high, jobs_per_million, social_return_note, environmental_note, risk_level, horizon_years, assumptions, administrative_regions(name)",
+      )
+      .order("category");
+    return (data ?? []).map((p) => ({
+      id: p.id,
+      title: p.title,
+      summary: p.summary,
+      category: p.category,
+      region: (p.administrative_regions as unknown as { name: string } | null)?.name ?? null,
+      fundingTarget: Number(p.funding_target),
+      publicContribution: Number(p.public_contribution),
+      returnLow: Number(p.private_return_low),
+      returnCentral: Number(p.private_return_central),
+      returnHigh: Number(p.private_return_high),
+      jobsPerMillion: Number(p.jobs_per_million),
+      socialNote: p.social_return_note,
+      environmentalNote: p.environmental_note,
+      risk: p.risk_level,
+      years: p.horizon_years,
+      assumptions: (p.assumptions as string[]) ?? [],
+    }));
+  },
+  ["projects"],
+  { revalidate: 3600 },
+);
+
+export const getCountryId = unstable_cache(
+  async (): Promise<string | null> => {
+    const { data } = await createPublicClient().from("country_configurations").select("id").eq("slug", "verdania").maybeSingle();
+    return data?.id ?? null;
+  },
+  ["country-id"],
+  { revalidate: 86_400 },
+);
+
+export type ScenarioSummary = {
+  id: string;
+  title: string;
+  description: string | null;
+  horizon: number;
+  visibility: "private" | "public";
+  createdAt: string;
+  publishedAt: string | null;
+};
+
+/** Scenarios participants chose to publish (public, newest first). */
+export const getPublishedScenarios = unstable_cache(
+  async (): Promise<ScenarioSummary[]> => {
+    const { data } = await createPublicClient()
+      .from("simulation_scenarios")
+      .select("id, title, description, horizon, visibility, created_at, published_at")
+      .eq("visibility", "public")
+      .order("published_at", { ascending: false })
+      .limit(50);
+    return (data ?? []).map(toSummary);
+  },
+  ["published-scenarios"],
+  { revalidate: 60, tags: ["published-scenarios"] },
+);
+
+export function toSummary(r: {
+  id: string;
+  title: string;
+  description: string | null;
+  horizon: number;
+  visibility: "private" | "public";
+  created_at: string;
+  published_at: string | null;
+}): ScenarioSummary {
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    horizon: r.horizon,
+    visibility: r.visibility,
+    createdAt: r.created_at,
+    publishedAt: r.published_at,
+  };
+}
