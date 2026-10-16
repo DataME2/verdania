@@ -13,8 +13,9 @@ export function SiteFooter({ modelVersion }: { modelVersion: string }) {
         <nav className="flex flex-wrap gap-6 text-sm font-semibold text-white/70" aria-label="Footer">
           <Link href="/methodology" className="hover:text-white">Research and Methodology</Link>
           <Link href="/discover" className="hover:text-white">Discover Verdania</Link>
-          <Link href="/people" className="hover:text-white">Synthetic data</Link>
+          <Link href="/methodology#data" className="hover:text-white">Synthetic data</Link>
           <Link href="/community" className="hover:text-white">Community</Link>
+          <Link href="/community#contribute" className="hover:text-white">{t.contribute.footer}</Link>
         </nav>
       </div>
     </footer>

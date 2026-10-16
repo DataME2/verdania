@@ -19,7 +19,7 @@ export type SimResult = {
   engine_git_sha: string;
   input_hash: string;
   output_hash: string;
-  inputs: { levers: Record<string, number | string>; horizon: number };
+  inputs: { levers: Record<string, number | string>; horizon: number; structural_overrides: Record<string, number> };
   years: number[];
   indicators: Record<string, Indicator>;
   deciles: {

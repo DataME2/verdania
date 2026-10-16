@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw } from "lucide-react";
-import type { Lever } from "@/lib/data";
-import { fmtDelta } from "@/lib/format";
+import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, X } from "lucide-react";
+import type { Evidence, Lever, Parameter } from "@/lib/data";
+import { fmtDelta, fmtParam } from "@/lib/format";
 import { t } from "@/lib/messages";
 import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
@@ -25,14 +25,22 @@ const GROUPS: [keyof typeof t.experiment.groups, string[]][] = [
 const CARDS = ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "unemployment", "labour_share", "debt_share"];
 const CHARTS = ["gdp_pc", "poverty_anchored", "poverty_relative", "gini_disposable", "median_income", "unemployment", "debt_share"];
 const EPS = 1e-9;
+const EVIDENCE: Evidence[] = ["contested", "theoretical", "empirical-range", "synthetic"];
 
-type State = { preset: PresetOption["id"]; values: Record<string, number>; closure: string; horizon: SimRequest["horizon"] };
+type State = {
+  preset: PresetOption["id"];
+  values: Record<string, number>;
+  closure: string;
+  horizon: SimRequest["horizon"];
+  /** assumption overrides only; an assumption at its central value is absent */
+  structural: Record<string, number>;
+};
 
 function numeric(levers: Record<string, number | string>) {
   return Object.fromEntries(Object.entries(levers).filter(([, v]) => typeof v === "number")) as Record<string, number>;
 }
 
-function fromUrl(params: URLSearchParams, presets: PresetOption[], levers: Lever[]): State {
+function fromUrl(params: URLSearchParams, presets: PresetOption[], levers: Lever[], assumptions: Parameter[]): State {
   const preset = presets.find((p) => p.id === params.get("preset"))?.id ?? "baseline";
   const start = presets.find((p) => p.id === preset)!.levers;
   const values = numeric(start);
@@ -41,8 +49,13 @@ function fromUrl(params: URLSearchParams, presets: PresetOption[], levers: Lever
     if (params.has(l.code) && Number.isFinite(v)) values[l.code] = Math.min(l.max, Math.max(l.min, v));
   }
   const closure = params.get("closure") === "adjust_other" ? "adjust_other" : String(start.closure ?? "borrow");
+  const structural: Record<string, number> = {};
+  for (const a of assumptions) {
+    const v = Number(params.get(a.code));
+    if (params.has(a.code) && Number.isFinite(v) && Math.abs(v - a.base) > EPS) structural[a.code] = Math.min(a.max, Math.max(a.min, v));
+  }
   const h = Number(params.get("horizon"));
-  return { preset, values, closure, horizon: (HORIZONS as readonly number[]).includes(h) ? (h as State["horizon"]) : 10 };
+  return { preset, values, closure, horizon: (HORIZONS as readonly number[]).includes(h) ? (h as State["horizon"]) : 10, structural };
 }
 
 function toUrl(s: State, presets: PresetOption[]) {
@@ -52,16 +65,34 @@ function toUrl(s: State, presets: PresetOption[]) {
   if (s.horizon !== 10) q.set("horizon", String(s.horizon));
   for (const [k, v] of Object.entries(s.values)) if (Math.abs(v - Number(start[k])) > EPS) q.set(k, String(v));
   if (s.closure !== start.closure) q.set("closure", s.closure);
+  for (const [k, v] of Object.entries(s.structural)) q.set(k, String(v));
   return q.toString();
 }
 
-export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: PresetOption[]; signedIn: boolean }) {
+export function Lab({
+  levers,
+  presets,
+  assumptions,
+  signedIn,
+}: {
+  levers: Lever[];
+  presets: PresetOption[];
+  assumptions: Parameter[];
+  signedIn: boolean;
+}) {
   const params = useSearchParams();
   const byCode = useMemo(() => Object.fromEntries(levers.map((l) => [l.code, l])), [levers]);
-  const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers));
+  const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers, assumptions));
+  const [challengeOpen] = useState(() => Object.keys(s.structural).length > 0);
   const [chart, setChart] = useState("gdp_pc");
 
-  const request: SimRequest = { preset: s.preset, levers: { ...s.values, closure: s.closure }, horizon: s.horizon };
+  const overrides = assumptions.filter((a) => a.code in s.structural);
+  const request: SimRequest = {
+    preset: s.preset,
+    levers: { ...s.values, closure: s.closure },
+    horizon: s.horizon,
+    ...(overrides.length ? { structural: s.structural } : {}),
+  };
   const sim = useSimulation(request, 400);
   const query = toUrl(s, presets);
   const changed = levers.filter((l) => Math.abs(s.values[l.code] - l.base) > EPS).length + (s.closure !== "borrow" ? 1 : 0);
@@ -74,6 +105,13 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
   const set = (patch: Partial<State>) => setS((prev) => ({ ...prev, ...patch }));
   const applyPreset = (p: PresetOption) =>
     set({ preset: p.id, values: numeric(p.levers), closure: String(p.levers.closure ?? "borrow") });
+  const setAssumption = (a: Parameter, v: number) =>
+    setS((prev) => {
+      const structural = { ...prev.structural };
+      if (Math.abs(v - a.base) < EPS) delete structural[a.code];
+      else structural[a.code] = v;
+      return { ...prev, structural };
+    });
   const today = presets.find((p) => p.id === "baseline")!;
   const tryOut = (overrides: Record<string, number>) => set({ preset: "baseline", values: { ...numeric(today.levers), ...overrides }, closure: "borrow" });
 
@@ -180,6 +218,38 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
             <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.experiment.resetAll}
           </button>
         </div>
+
+        {assumptions.length > 0 && (
+          <details className="rounded-[2rem] bg-white p-5 shadow-soft" open={challengeOpen}>
+            <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <span className="font-display text-xl font-semibold text-forest">{t.challenge.title}</span>
+              <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.challenge.changed(overrides.length)}</span>
+            </summary>
+            <p className="mt-3 text-sm text-ink/70">{t.challenge.lead}</p>
+            {EVIDENCE.map((ev) => {
+              const group = assumptions.filter((a) => a.evidence === ev);
+              return group.length ? (
+                <fieldset key={ev} className="mt-5">
+                  <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.methodology.evidence[ev].label}</legend>
+                  <p className="mt-1 text-[11px] text-ink/70">{t.methodology.evidence[ev].text}</p>
+                  <div className="mt-2 space-y-2">
+                    {group.map((a) => (
+                      <LeverSlider key={a.code} lever={a} assumption value={s.structural[a.code] ?? a.base} onChange={(v) => setAssumption(a, v)} />
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null;
+            })}
+            <button
+              type="button"
+              onClick={() => set({ structural: {} })}
+              disabled={overrides.length === 0}
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest disabled:opacity-40"
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.challenge.reset}
+            </button>
+          </details>
+        )}
       </div>
 
       {/* ------------------------------------------------------------ results */}
@@ -192,6 +262,28 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
             {loading ? t.lab.recalculating : data ? `Model v${data.model_version} · ${data.uncertainty.draws} draws · not a forecast` : ""}
           </p>
         </div>
+
+        {overrides.length > 0 && (
+          <section className="rounded-2xl border border-sun bg-sun/15 p-4" aria-labelledby="overrides-title">
+            <h3 id="overrides-title" className="text-sm font-bold text-forest">{t.challenge.chips}</h3>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {overrides.map((a) => (
+                <li key={a.code} className="inline-flex items-center gap-1 rounded-full bg-white py-1 pl-3 pr-1 text-xs font-semibold text-ink">
+                  {t.challenge.chip(a.label, fmtParam(s.structural[a.code]), fmtParam(a.base))}
+                  <button
+                    type="button"
+                    onClick={() => setAssumption(a, a.base)}
+                    aria-label={t.challenge.remove(a.label)}
+                    className="grid h-6 w-6 place-items-center rounded-full text-forest hover:bg-sun/30"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-ink/70">{t.challenge.fixed}</p>
+          </section>
+        )}
 
         <SaveScenario request={request} signedIn={signedIn} next={`/experiment${query ? `?${query}` : ""}`} />
 

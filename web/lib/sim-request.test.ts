@@ -14,6 +14,12 @@ test("accepts a well-formed request and normalises it", () => {
     horizon: 20,
   });
   assert.deepEqual(parseSimRequest({ preset: "baseline", horizon: 5 }), { levers: {}, horizon: 5 });
+  assert.deepEqual(parseSimRequest({ levers: {}, structural: { r0: 0.05, eta_mw: -0.02 } }), {
+    levers: {},
+    horizon: 10,
+    structural: { eta_mw: -0.02, r0: 0.05 },
+  });
+  assert.deepEqual(parseSimRequest({ levers: {}, structural: {} }), { levers: {}, horizon: 10 });
 });
 
 test("rejects anything else", () => {
@@ -31,7 +37,11 @@ test("rejects anything else", () => {
     { levers: { "DROP TABLE": 1 } },
     { levers: Object.fromEntries(Array.from({ length: 21 }, (_, i) => [`l${"a".repeat(i % 5)}`, i])) , mode: "full" },
     { mode: "full" }, // full mode is for saved scenarios, never from a browser
-    { structural: { psi: 1 } },
+    { structural: [] },
+    { structural: { psi: "1" } },
+    { structural: { psi: NaN } },
+    { structural: { "Psi;": 1 } },
+    { structural: Object.fromEntries(Array.from({ length: 31 }, (_, i) => [`p${i}`, 0])) },
   ]) {
     assert.ok("error" in parseSimRequest(bad), `accepted ${JSON.stringify(bad)}`);
   }

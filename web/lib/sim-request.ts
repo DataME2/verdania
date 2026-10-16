@@ -9,11 +9,13 @@ export type SimRequest = {
   preset?: (typeof PRESETS)[number];
   levers: Record<string, number | string>;
   horizon: (typeof HORIZONS)[number];
+  /** "Challenge this result": structural parameters held at the user's value (the engine checks each range). */
+  structural?: Record<string, number>;
 };
 
 export function parseSimRequest(body: unknown): SimRequest | { error: string } {
   if (!body || typeof body !== "object" || Array.isArray(body)) return { error: "expected a JSON object" };
-  const { preset, levers = {}, horizon = 10, ...rest } = body as Record<string, unknown>;
+  const { preset, levers = {}, horizon = 10, structural = {}, ...rest } = body as Record<string, unknown>;
   if (Object.keys(rest).length) return { error: `unexpected field ${Object.keys(rest)[0]}` };
   if (!HORIZONS.includes(horizon as never)) return { error: "horizon must be 1, 5, 10 or 20" };
   if (preset !== undefined && !PRESETS.includes(preset as never)) return { error: "unknown preset" };
@@ -25,9 +27,18 @@ export function parseSimRequest(body: unknown): SimRequest | { error: string } {
     const ok = code === "closure" ? CLOSURES.includes(value as string) : typeof value === "number" && Number.isFinite(value);
     if (!ok) return { error: `bad value for ${code}` };
   }
+  if (!structural || typeof structural !== "object" || Array.isArray(structural)) return { error: "structural must be an object" };
+  const overrides = Object.entries(structural as Record<string, unknown>);
+  if (overrides.length > 30) return { error: "too many structural parameters" };
+  for (const [code, value] of overrides) {
+    if (!/^[a-z][a-z0-9_]{0,15}$/.test(code)) return { error: "bad structural parameter name" };
+    if (typeof value !== "number" || !Number.isFinite(value)) return { error: `bad value for ${code}` };
+  }
   return {
     ...(preset && preset !== "baseline" ? { preset: preset as SimRequest["preset"] } : {}),
     levers: Object.fromEntries(entries.sort(([a], [b]) => a.localeCompare(b))) as SimRequest["levers"],
     horizon: horizon as SimRequest["horizon"],
+    // omitted when empty, so a run without overrides keeps the same cache key as before
+    ...(overrides.length ? { structural: Object.fromEntries(overrides.sort(([a], [b]) => a.localeCompare(b))) as Record<string, number> } : {}),
   };
 }

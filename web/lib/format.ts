@@ -27,6 +27,11 @@ export function fmtLever(v: number | string, unit: string | null): string {
   return `${Number.isInteger(Math.round(pct * 10) / 10) ? Math.round(pct) : pct.toFixed(1)}%${unit === "share of output" ? " of output" : ""}`;
 }
 
+/** Structural parameters are plain coefficients: 0.0125, −0.05. */
+export function fmtParam(v: number): string {
+  return v.toLocaleString("en", { maximumFractionDigits: 4 }).replace("-", "−");
+}
+
 export type Tone = "good" | "bad" | "neutral";
 
 /** Colour only follows a direction the engine marks as desirable; contested measures stay neutral. */
