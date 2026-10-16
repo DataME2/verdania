@@ -6,17 +6,16 @@ NumPy comes from its pre-built manylinux wheel.
 
 import shutil
 import subprocess
+import tempfile
 import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BUILD = ROOT / "build" / "lambda"
+BUILD = Path(tempfile.mkdtemp(prefix="verdania-lambda-"))  # outside the repo: synced folders lock build files
 OUT = ROOT / "dist" / "verdania-sim-lambda.zip"
 SKIP_DIRS = {"__pycache__", "tests", "testing"}  # NumPy's own test suites are not needed at runtime
 SKIP_MODULES = {"api.py", "seed.py"}  # FastAPI server and DB seed generator stay out of the bundle
 
-shutil.rmtree(BUILD, ignore_errors=True)
-BUILD.mkdir(parents=True)
 subprocess.run(
     ["uv", "pip", "install", "--quiet", "--target", str(BUILD), "--python-platform", "aarch64-manylinux2014",
      "--python-version", "3.12", "--only-binary", ":all:", "numpy>=1.26"],
@@ -31,4 +30,5 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         rel = path.relative_to(BUILD)
         if path.is_file() and not SKIP_DIRS & set(rel.parts):
             zf.write(path, rel.as_posix())
+shutil.rmtree(BUILD, ignore_errors=True)
 print(f"wrote {OUT} ({OUT.stat().st_size / 1e6:.1f} MB)")
