@@ -120,6 +120,12 @@ def test_run_payload_shape():
     assert all(v == 0 for v in baseline["indicators"]["gini_disposable"]["delta"])
 
 
+def test_every_explained_channel_is_returned():
+    for code, (channels, _) in engine.MECHANISMS.items():
+        assert set(channels) <= set(engine.INDICATORS), f"{code} cites a channel the response omits"
+    assert set(engine.MECHANISMS) == set(LEVERS) | {"closure"}
+
+
 def test_full_mode_has_sensitivity():
     r = engine.run(preset="B", horizon=5, mode="full")
     assert r["uncertainty"]["draws"] == 200
