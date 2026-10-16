@@ -41,6 +41,25 @@ test("J2: switching to a preset runs the lab with accounting checks", async ({ p
   clean();
 });
 
+test("Challenge this result: an assumption override shows as a chip, travels in the URL and can be undone", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/experiment");
+  await page.getByText("Challenge this result").click();
+  await page.getByLabel("Unemployment response to minimum-wage bite", { exact: true }).focus();
+  await page.keyboard.press("End");
+  const chips = page.getByRole("region", { name: "Assumptions you changed" });
+  await expect(chips).toContainText("Unemployment response to minimum-wage bite: 0.2 (central 0.05)");
+  await expect(page).toHaveURL(/eta_mw=0\.2/);
+  await expect(page.getByText("Accounting identities hold")).toBeVisible(); // the engine accepted the override
+  await chips.getByRole("button", { name: /to its central value/ }).click();
+  await expect(chips).toHaveCount(0);
+
+  await page.goto("/experiment?psi=0.8"); // a shared link reopens the challenge with its override
+  await expect(page.getByRole("region", { name: "Assumptions you changed" })).toContainText("deficits: 0.8");
+  await expect(page.getByLabel("Crowding-out of private investment by deficits", { exact: true })).toBeVisible();
+  clean();
+});
+
 test("keyboard: the first Tab reaches the skip link, which moves to the content", async ({ page }) => {
   await page.goto("/methodology");
   await page.keyboard.press("Tab");
@@ -95,6 +114,19 @@ test("Justice: today's measures, redistribution and the four systems come from t
   const systems = page.getByRole("table", { name: /Four economic systems/ });
   await expect(systems.getByRole("link", { name: /Open in the Lab/ })).toHaveCount(4);
   await expect(systems.getByRole("row", { name: /Anchored poverty/ })).not.toContainText("—");
+  clean();
+});
+
+test("Contribute: the footer link reaches the form and its server action answers (honeypot path, nothing stored)", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Share an idea" }).click();
+  await expect(page).toHaveURL(/\/community#contribute$/);
+  const form = page.locator("#contribute");
+  await form.getByLabel("Your message").fill("An end-to-end test message.");
+  await page.locator('input[name="website"]').evaluate((el: HTMLInputElement) => (el.value = "bot"));
+  await form.getByRole("button", { name: "Send" }).click();
+  await expect(form.getByText("Thank you. Your message has been received.")).toBeVisible();
   clean();
 });
 

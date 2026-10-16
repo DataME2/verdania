@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { toSummary, type ScenarioSummary } from "@/lib/data";
+import type { SimRequest } from "@/lib/sim-request";
 
 // Reads with the visitor's own session: row-level security decides what comes back.
 
@@ -55,6 +56,7 @@ export async function getMyScenarios(): Promise<ScenarioSummary[]> {
 
 export type Scenario = ScenarioSummary & {
   levers: Record<string, number | string>;
+  structural: Record<string, number>;
   modelVersion: string;
   outputHash: string | null;
   inputHash: string | null;
@@ -68,7 +70,7 @@ export async function getScenario(id: string): Promise<Scenario | null> {
   const [{ data }, { data: claims }] = await Promise.all([
     supabase
       .from("simulation_scenarios")
-      .select("id, owner_id, title, description, horizon, visibility, created_at, published_at, levers, model_version, input_hash, output_hash")
+      .select("id, owner_id, title, description, horizon, visibility, created_at, published_at, levers, structural_overrides, model_version, input_hash, output_hash")
       .eq("id", id)
       .maybeSingle(),
     supabase.auth.getClaims(),
@@ -77,9 +79,19 @@ export async function getScenario(id: string): Promise<Scenario | null> {
   return {
     ...toSummary(data),
     levers: data.levers,
+    structural: data.structural_overrides ?? {},
     modelVersion: data.model_version,
     inputHash: data.input_hash,
     outputHash: data.output_hash,
     isOwner: !!claims?.claims?.sub && claims.claims.sub === data.owner_id,
+  };
+}
+
+/** The engine request that reproduces a saved scenario (shown on its page and re-run by "verify"). */
+export function scenarioRequest(s: Scenario): SimRequest {
+  return {
+    levers: s.levers,
+    horizon: s.horizon as SimRequest["horizon"],
+    ...(Object.keys(s.structural).length ? { structural: s.structural } : {}),
   };
 }

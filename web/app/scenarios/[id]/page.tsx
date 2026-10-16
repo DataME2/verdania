@@ -5,9 +5,9 @@ import { ArrowUpRight, Lock, Globe } from "lucide-react";
 import { deleteScenario, setVisibility } from "@/app/scenarios/actions";
 import { IndicatorCard } from "@/components/lab/indicator-card";
 import { VerifyButton } from "@/components/scenario/verify-button";
-import { getScenario } from "@/lib/account-data";
-import { getLevers } from "@/lib/data";
-import { fmtLever } from "@/lib/format";
+import { getScenario, scenarioRequest } from "@/lib/account-data";
+import { getLevers, getMethodology } from "@/lib/data";
+import { fmtLever, fmtParam } from "@/lib/format";
 import { t } from "@/lib/messages";
 import { runSimulation } from "@/lib/sim";
 
@@ -22,14 +22,16 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
   const scenario = await getScenario((await params).id);
   if (!scenario) notFound(); // missing, or private and not yours: the database returns nothing either way
 
-  const levers = await getLevers(scenario.modelVersion);
+  const [levers, methodology] = await Promise.all([getLevers(scenario.modelVersion), getMethodology(scenario.modelVersion)]);
+  const overrides = (methodology.parameters ?? []).filter((p) => p.kind === "structural" && p.code in scenario.structural);
   const changed = levers.filter((l) => typeof scenario.levers[l.code] === "number" && Math.abs(Number(scenario.levers[l.code]) - l.base) > 1e-9);
   const closureChanged = scenario.levers.closure && scenario.levers.closure !== "borrow";
   const lab = new URLSearchParams(changed.map((l) => [l.code, String(scenario.levers[l.code])]));
   if (closureChanged) lab.set("closure", String(scenario.levers.closure));
   if (scenario.horizon !== 10) lab.set("horizon", String(scenario.horizon));
+  for (const [k, v] of Object.entries(scenario.structural)) lab.set(k, String(v));
 
-  const outcome = await runSimulation({ levers: scenario.levers, horizon: scenario.horizon as 1 | 5 | 10 | 20 }).catch(() => null);
+  const outcome = await runSimulation(scenarioRequest(scenario)).catch(() => null);
   const result = outcome?.ok ? outcome.data : null;
 
   return (
@@ -72,6 +74,21 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
                 </li>
               )}
             </ul>
+          )}
+          {overrides.length > 0 && (
+            <>
+              <h3 className="mt-5 text-sm font-bold text-forest">{t.challenge.scenario}</h3>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                {overrides.map((p) => (
+                  <li key={p.code} className="flex justify-between gap-3 rounded-xl bg-sun/15 px-3 py-2 text-sm">
+                    <span className="text-ink/80">{p.label}</span>
+                    <span className="shrink-0 font-bold tabular-nums text-forest">
+                      {fmtParam(p.base)} → {fmtParam(scenario.structural[p.code])}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           <Link href={`/experiment${lab.size ? `?${lab}` : ""}`} className="mt-4 inline-flex items-center gap-2 font-bold text-forest hover:text-leaf">
             {t.scenarios.openLab} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />

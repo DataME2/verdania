@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { getScenario } from "@/lib/account-data";
+import { getScenario, scenarioRequest } from "@/lib/account-data";
 import { getCountryId } from "@/lib/data";
 import { simulateFresh } from "@/lib/sim";
 import { parseSimRequest } from "@/lib/sim-request";
@@ -33,8 +33,9 @@ export async function saveScenario(_prev: SaveState, form: FormData): Promise<Sa
   const { count } = await supabase.from("simulation_scenarios").select("id", { count: "exact", head: true }).eq("owner_id", uid);
   if ((count ?? 0) >= MAX_SCENARIOS) return { error: `You can keep up to ${MAX_SCENARIOS} scenarios. Delete one first.` };
 
-  // The full lever set defines the scenario; the starting preset is not stored, so re-runs match exactly.
-  const run = { levers: parsed.levers, horizon: parsed.horizon };
+  // The full lever set and any assumption overrides define the scenario; the starting preset is not
+  // stored, so re-runs match exactly.
+  const run = { levers: parsed.levers, horizon: parsed.horizon, ...(parsed.structural ? { structural: parsed.structural } : {}) };
   const outcome = await simulateFresh(run).catch(() => null);
   if (!outcome) return { error: "The simulation engine is unavailable right now. Nothing was saved." };
   if (!outcome.ok) return { error: outcome.error };
@@ -49,6 +50,7 @@ export async function saveScenario(_prev: SaveState, form: FormData): Promise<Sa
       description,
       challenge_slug: "growth-and-poverty",
       levers: outcome.data.inputs.levers,
+      structural_overrides: outcome.data.inputs.structural_overrides ?? {},
       horizon: parsed.horizon,
       model_version: outcome.data.model_version,
       visibility,
@@ -70,10 +72,7 @@ export type VerifyState = { status?: "match" | "differs" | "error"; detail?: str
 export async function verifyScenario(_prev: VerifyState, form: FormData): Promise<VerifyState> {
   const scenario = await getScenario(String(form.get("id") ?? ""));
   if (!scenario) return { status: "error", detail: "Scenario not found." };
-  const outcome = await simulateFresh({
-    levers: scenario.levers,
-    horizon: scenario.horizon as 1 | 5 | 10 | 20,
-  }).catch(() => null);
+  const outcome = await simulateFresh(scenarioRequest(scenario)).catch(() => null);
   if (!outcome || !outcome.ok) return { status: "error", detail: "The engine couldn't re-run this scenario right now." };
   if (outcome.data.model_version !== scenario.modelVersion) {
     return { status: "differs", detail: `Saved with model v${scenario.modelVersion}; the engine now runs v${outcome.data.model_version}.` };

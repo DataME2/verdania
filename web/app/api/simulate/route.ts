@@ -1,24 +1,12 @@
 import { type NextRequest } from "next/server";
 import { runSimulation } from "@/lib/sim";
+import { clientIp, rateLimiter } from "@/lib/rate-limit";
 import { parseSimRequest } from "@/lib/sim-request";
 
-// ponytail: per-instance, in-memory limiter; use the host's edge rate limiting once deployed on several instances.
-const WINDOW_MS = 60_000;
-const LIMIT = 40;
-const hits = new Map<string, number[]>();
-
-function allowed(ip: string) {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-  if (hits.size > 10_000) hits.clear(); // bound memory
-  return recent.length <= LIMIT;
-}
+const allowed = rateLimiter(40, 60_000);
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
-  if (!allowed(ip)) {
+  if (!allowed(clientIp(request.headers))) {
     return Response.json({ error: "Too many requests. Wait a minute and try again." }, { status: 429 });
   }
   const text = await request.text();

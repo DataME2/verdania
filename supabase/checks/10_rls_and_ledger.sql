@@ -208,5 +208,45 @@ select test.as_user(null);
 select test.ok((select count(*) from public.public_allocation_totals()) = 1, 'projects with < 5 participants are hidden');
 select test.ok((select participants from public.public_allocation_totals() where project_id = test.p(1)) = 6, 'P1 shows 6 participants');
 
+-- ------------------------------------------------------------ suggestions
+select test.ok(public.submit_suggestion('model', '  Psi looks too low to me  ', ' ', ' X@Example.org ') is not null,
+               'anyone can send a suggestion');
+do $$ begin
+  perform public.submit_suggestion('model', 'too short');
+  raise exception 'FAIL: a message under 10 characters was accepted';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform public.submit_suggestion('spam', 'a message of valid length');
+  raise exception 'FAIL: an unknown topic was accepted';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform public.submit_suggestion('other', 'a message of valid length', null, 'not-an-email');
+  raise exception 'FAIL: a malformed email was accepted';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform count(*) from public.suggestions;
+  raise exception 'FAIL: anon read suggestions';
+exception when insufficient_privilege then null; end $$;
+set role authenticated;
+select test.as_user(1);
+select test.ok(public.submit_suggestion('data', 'A source for the wage data') is not null, 'signed-in users can send too');
+do $$ begin
+  perform count(*) from public.suggestions;
+  raise exception 'FAIL: a signed-in user read suggestions';
+exception when insufficient_privilege then null; end $$;
+reset role;
+select test.ok((select count(*) from public.suggestions) = 2, 'only valid suggestions are stored');
+select test.ok((select (message, name, email) is not distinct from ('Psi looks too low to me', null::text, 'x@example.org')
+                from public.suggestions where topic = 'model'), 'message trimmed, blank name dropped, email normalised');
+select test.ok((select user_id from public.suggestions where topic = 'data') = test.u(1)
+               and (select user_id from public.suggestions where topic = 'model') is null, 'the sender is recorded only when signed in');
+insert into public.suggestions (topic, message) select 'other', 'filler message' from generate_series(1, 198);
+set role anon;
+select test.as_user(null);
+do $$ begin
+  perform public.submit_suggestion('other', 'one message too many');
+  raise exception 'FAIL: the hourly cap was not enforced';
+exception when sqlstate '54000' then null; end $$;
+
 reset role;
 select 'ALL CHECKS PASSED' as result;
