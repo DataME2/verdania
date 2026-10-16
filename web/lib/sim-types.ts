@@ -27,6 +27,8 @@ export type SimResult = {
     baseline: { market: Series; disposable: Series } | null;
     scenario: { market: Series; disposable: Series } | null;
   };
+  /** per region at the horizon; null when the run stops before it */
+  regions: { code: string; population: number; baseline: Record<string, number | null>; scenario: Record<string, number | null> }[] | null;
   fiscal: { sustainable: boolean; flags: string[]; valid_until: number; draws_breaking_down: number | null };
   mechanisms: {
     lever: string;

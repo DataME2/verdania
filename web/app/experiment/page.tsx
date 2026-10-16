@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Lab, type PresetOption } from "@/components/lab/lab";
 import { getViewer } from "@/lib/auth";
-import { getBaseline, getLevers, getMethodology } from "@/lib/data";
+import { getBaseline, getLevers, getMethodology, getRegions } from "@/lib/data";
 import { t } from "@/lib/messages";
 
 export const metadata: Metadata = {
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ExperimentPage() {
-  const [baseline, viewer] = await Promise.all([getBaseline(), getViewer()]);
+  const [baseline, viewer, regionList] = await Promise.all([getBaseline(), getViewer(), getRegions()]);
+  const regions = Object.fromEntries(regionList.map((r) => [r.code, r.name]));
   const [levers, methodology] = baseline
     ? await Promise.all([getLevers(baseline.modelVersion), getMethodology(baseline.modelVersion)])
     : [[], null];
@@ -28,7 +29,7 @@ export default async function ExperimentPage() {
         <div className="mt-10">
           {levers.length && presets.length ? (
             <Suspense fallback={<p className="text-ink/70">{t.lab.recalculating}</p>}>
-              <Lab levers={levers} presets={presets} assumptions={assumptions} signedIn={!!viewer} />
+              <Lab levers={levers} presets={presets} assumptions={assumptions} regions={regions} signedIn={!!viewer} />
             </Suspense>
           ) : (
             <p className="text-ink/70">{t.lab.error}</p>

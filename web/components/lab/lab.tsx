@@ -5,24 +5,30 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, X } from "lucide-react";
 import type { Evidence, Lever, Parameter } from "@/lib/data";
-import { fmtDelta, fmtParam } from "@/lib/format";
+import { fmtDelta, fmtParam, fmtValue } from "@/lib/format";
 import { LEVER_GROUPS } from "@/lib/levers";
 import { t } from "@/lib/messages";
 import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
-import { IndicatorCard } from "./indicator-card";
+import { DeltaChip, IndicatorCard } from "./indicator-card";
 import { LeverSlider } from "./lever-slider";
 import { SaveScenario } from "./save-scenario";
 import { useSimulation } from "./use-simulation";
 
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
 
-const CARDS = ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "unemployment", "labour_share", "debt_share"];
-const CHARTS = ["gdp_pc", "poverty_anchored", "poverty_relative", "gini_disposable", "median_income", "unemployment", "debt_share"];
+const CHALLENGES = t.experiment.challenges;
+const REGION_COLS = [
+  { code: "mean_income", unit: "V$", desirable: "up" },
+  { code: "poverty_relative", unit: "share", desirable: "down" },
+  { code: "unemployment", unit: "share", desirable: "down" },
+  { code: "health_access", unit: "index", desirable: "up" },
+] as const;
 const EPS = 1e-9;
 const EVIDENCE: Evidence[] = ["contested", "theoretical", "empirical-range", "synthetic"];
 
 type State = {
+  challenge: string;
   preset: PresetOption["id"];
   values: Record<string, number>;
   closure: string;
@@ -50,12 +56,14 @@ function fromUrl(params: URLSearchParams, presets: PresetOption[], levers: Lever
     if (params.has(a.code) && Number.isFinite(v) && Math.abs(v - a.base) > EPS) structural[a.code] = Math.min(a.max, Math.max(a.min, v));
   }
   const h = Number(params.get("horizon"));
-  return { preset, values, closure, horizon: (HORIZONS as readonly number[]).includes(h) ? (h as State["horizon"]) : 10, structural };
+  const challenge = CHALLENGES.find((c) => c.slug === params.get("challenge"))?.slug ?? CHALLENGES[0].slug;
+  return { challenge, preset, values, closure, horizon: (HORIZONS as readonly number[]).includes(h) ? (h as State["horizon"]) : 10, structural };
 }
 
 function toUrl(s: State, presets: PresetOption[]) {
   const start = presets.find((p) => p.id === s.preset)!.levers;
   const q = new URLSearchParams();
+  if (s.challenge !== CHALLENGES[0].slug) q.set("challenge", s.challenge);
   if (s.preset !== "baseline") q.set("preset", s.preset);
   if (s.horizon !== 10) q.set("horizon", String(s.horizon));
   for (const [k, v] of Object.entries(s.values)) if (Math.abs(v - Number(start[k])) > EPS) q.set(k, String(v));
@@ -68,18 +76,22 @@ export function Lab({
   levers,
   presets,
   assumptions,
+  regions,
   signedIn,
 }: {
   levers: Lever[];
   presets: PresetOption[];
   assumptions: Parameter[];
+  regions: Record<string, string>;
   signedIn: boolean;
 }) {
   const params = useSearchParams();
   const byCode = useMemo(() => Object.fromEntries(levers.map((l) => [l.code, l])), [levers]);
   const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers, assumptions));
   const [challengeOpen] = useState(() => Object.keys(s.structural).length > 0);
-  const [chart, setChart] = useState("gdp_pc");
+  const [chart, setChart] = useState("");
+  const ch = CHALLENGES.find((c) => c.slug === s.challenge)!;
+  const shown = (ch.cards as readonly string[]).includes(chart) ? chart : ch.cards[0];
 
   const overrides = assumptions.filter((a) => a.code in s.structural);
   const request: SimRequest = {
@@ -119,11 +131,26 @@ export function Lab({
       {/* ------------------------------------------------------------ controls */}
       <div className="space-y-6">
         <section className="rounded-[2rem] bg-forest p-6 text-white" aria-labelledby="challenge">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-sage">{t.experiment.challengeLabel}</p>
-          <h2 id="challenge" className="mt-2 font-display text-2xl font-semibold leading-tight">{t.experiment.challenge}</h2>
-          <p className="mt-3 text-sm text-white/80">{t.experiment.challengeLead}</p>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label={t.experiment.challengePick}>
+            {CHALLENGES.map((c, i) => (
+              <button
+                key={c.slug}
+                type="button"
+                aria-pressed={c.slug === s.challenge}
+                title={c.question}
+                onClick={() => set({ challenge: c.slug })}
+                className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[.12em] transition ${
+                  c.slug === s.challenge ? "bg-sage text-forest" : "text-sage ring-1 ring-sage/40 hover:bg-white/10"
+                }`}
+              >
+                {t.experiment.challengeLabel(i + 1)}
+              </button>
+            ))}
+          </div>
+          <h2 id="challenge" className="mt-4 font-display text-2xl font-semibold leading-tight">{ch.question}</h2>
+          <p className="mt-3 text-sm text-white/80">{ch.lead}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {t.experiment.tries.map((x) => (
+            {ch.tries.map((x) => (
               <button
                 key={x.label}
                 type="button"
@@ -280,7 +307,7 @@ export function Lab({
           </section>
         )}
 
-        <SaveScenario request={request} signedIn={signedIn} next={`/experiment${query ? `?${query}` : ""}`} />
+        <SaveScenario challenge={s.challenge} request={request} signedIn={signedIn} next={`/experiment${query ? `?${query}` : ""}`} />
 
         {sim.status === "error" && (
           <p role="alert" className="rounded-2xl bg-loss/10 p-5 text-sm font-semibold text-loss">{sim.error || t.lab.error}</p>
@@ -297,7 +324,7 @@ export function Lab({
 
         <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4" aria-live="polite">
           {sim.status !== "error" &&
-            CARDS.map((c) => <IndicatorCard key={c} indicator={data?.indicators[c]} year={h} loading={loading} />)}
+            ch.cards.map((c) => <IndicatorCard key={c} indicator={data?.indicators[c]} year={h} loading={loading} />)}
         </div>
 
         {data && (
@@ -305,20 +332,20 @@ export function Lab({
             <section className="rounded-[2rem] bg-white p-6 shadow-soft" aria-labelledby="chart-title">
               <h3 id="chart-title" className="font-display text-xl font-semibold text-forest">{t.experiment.chart}</h3>
               <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Indicator">
-                {CHARTS.map((c) => (
+                {ch.cards.map((c) => (
                   <button
                     key={c}
                     type="button"
-                    aria-pressed={chart === c}
+                    aria-pressed={shown === c}
                     onClick={() => setChart(c)}
-                    className={`rounded-full border px-3 py-1 text-xs font-bold ${chart === c ? "border-forest bg-forest text-white" : "border-forest/15 text-forest hover:border-forest"}`}
+                    className={`rounded-full border px-3 py-1 text-xs font-bold ${shown === c ? "border-forest bg-forest text-white" : "border-forest/15 text-forest hover:border-forest"}`}
                   >
                     {data.indicators[c].label}
                   </button>
                 ))}
               </div>
               <div className="mt-4">
-                <LineBandChart indicator={data.indicators[chart]} years={data.years} />
+                <LineBandChart indicator={data.indicators[shown]} years={data.years} />
               </div>
             </section>
 
@@ -333,6 +360,45 @@ export function Lab({
                 />
               </div>
             </section>
+
+            {data.regions && (
+              <section className="rounded-[2rem] bg-white p-6 shadow-soft" aria-labelledby="where-title">
+                <h3 id="where-title" className="font-display text-xl font-semibold text-forest">{t.experiment.where}</h3>
+                <p className="mt-1 text-sm text-ink/70">{t.experiment.whereLead(h)}</p>
+                <div className="relative mt-4 overflow-x-auto" role="region" aria-labelledby="where-title" tabIndex={0}>
+                  <table className="w-full min-w-[600px] text-left text-sm tabular-nums">
+                    <caption className="sr-only">{t.experiment.whereCaption(h)}</caption>
+                    <thead>
+                      <tr className="border-b border-forest/15 text-xs text-ink/70">
+                        <th scope="col" className="py-2 pr-4 font-bold">{t.experiment.region}</th>
+                        {REGION_COLS.map((c) => (
+                          <th key={c.code} scope="col" className="py-2 pr-4 font-bold">{t.discover.layers[c.code]}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-forest/10">
+                      {data.regions.map((r) => (
+                        <tr key={r.code} className="align-top">
+                          <th scope="row" className="py-2.5 pr-4 font-semibold text-forest">{regions[r.code] ?? r.code}</th>
+                          {REGION_COLS.map((c) => {
+                            const b = r.baseline[c.code];
+                            const v = r.scenario[c.code];
+                            return (
+                              <td key={c.code} className="py-2.5 pr-4">
+                                <span className="block font-semibold">{fmtValue(v, c.unit)}</span>
+                                <span className="mt-1 block">
+                                  <DeltaChip delta={v == null || b == null ? null : v - b} unit={c.unit} desirable={c.desirable} />
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
 
             <section className="rounded-[2rem] bg-white p-6 shadow-soft" aria-labelledby="why-title">
               <h3 id="why-title" className="font-display text-xl font-semibold text-forest">{t.experiment.why}</h3>

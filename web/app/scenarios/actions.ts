@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { getScenario, scenarioRequest } from "@/lib/account-data";
 import { getCountryId } from "@/lib/data";
+import { t } from "@/lib/messages";
 import { simulateFresh } from "@/lib/sim";
 import { parseSimRequest } from "@/lib/sim-request";
 import { createClient } from "@/lib/supabase/server";
@@ -48,7 +49,7 @@ export async function saveScenario(_prev: SaveState, form: FormData): Promise<Sa
       country_id: countryId,
       title,
       description,
-      challenge_slug: "growth-and-poverty",
+      challenge_slug: t.experiment.challenges.find((c) => c.slug === form.get("challenge"))?.slug ?? t.experiment.challenges[0].slug,
       levers: outcome.data.inputs.levers,
       structural_overrides: outcome.data.inputs.structural_overrides ?? {},
       horizon: parsed.horizon,

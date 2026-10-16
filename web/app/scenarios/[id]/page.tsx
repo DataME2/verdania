@@ -29,6 +29,8 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
   const lab = new URLSearchParams(changed.map((l) => [l.code, String(scenario.levers[l.code])]));
   if (closureChanged) lab.set("closure", String(scenario.levers.closure));
   if (scenario.horizon !== 10) lab.set("horizon", String(scenario.horizon));
+  const challenge = t.experiment.challenges.find((c) => c.slug === scenario.challenge);
+  if (challenge && challenge !== t.experiment.challenges[0]) lab.set("challenge", challenge.slug);
   for (const [k, v] of Object.entries(scenario.structural)) lab.set(k, String(v));
 
   const outcome = await runSimulation(scenarioRequest(scenario)).catch(() => null);
@@ -50,6 +52,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
             </span>
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-forest sm:text-5xl">{scenario.title}</h1>
+          {challenge && <p className="mt-2 text-sm font-semibold text-leaf">{challenge.question}</p>}
           {scenario.description && <p className="mt-3 max-w-3xl whitespace-pre-line text-ink/80">{scenario.description}</p>}
         </header>
 

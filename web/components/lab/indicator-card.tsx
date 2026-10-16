@@ -12,7 +12,7 @@ const TONE: Record<Tone, string> = {
 export function DeltaChip({ delta, unit, desirable }: { delta: number | null; unit: string; desirable: Indicator["desirable"] }) {
   const Icon = delta == null || Math.abs(delta) < 1e-9 ? Minus : delta > 0 ? ArrowUp : ArrowDown;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${TONE[tone(delta, desirable)]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${TONE[tone(delta, desirable, unit)]}`}>
       <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {fmtDelta(delta, unit)}
     </span>
   );

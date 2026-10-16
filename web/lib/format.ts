@@ -9,11 +9,21 @@ export function fmtValue(v: number | null | undefined, unit: string): string {
   return v.toFixed(3); // index
 }
 
+/** The smallest change each unit's display can show, and how to write "less than that". */
+function precision(unit: string): [number, string] {
+  if (unit === "V$") return [0.5, "V$ 1"];
+  if (unit.startsWith("share")) return [0.0005, "0.1 pts"];
+  if (unit === "ratio") return [0.005, "0.01"];
+  return [0.0005, "0.001"]; // index
+}
+
 export function fmtDelta(d: number | null | undefined, unit: string): string {
   if (d == null || !Number.isFinite(d)) return "—";
   if (Math.abs(d) < EPS) return "no change";
   const sign = d > 0 ? "+" : "−";
   const a = Math.abs(d);
+  const [step, smallest] = precision(unit);
+  if (a < step) return `${sign}<${smallest}`; // never "+0.0 pts"
   if (unit === "V$") return `${sign}V$ ${Math.round(a).toLocaleString("en")}`;
   if (unit.startsWith("share")) return `${sign}${(a * 100).toFixed(1)} pts`;
   if (unit === "ratio") return `${sign}${a.toFixed(2)}`;
@@ -34,8 +44,11 @@ export function fmtParam(v: number): string {
 
 export type Tone = "good" | "bad" | "neutral";
 
-/** Colour only follows a direction the engine marks as desirable; contested measures stay neutral. */
-export function tone(d: number | null | undefined, desirable: "up" | "down" | null): Tone {
-  if (d == null || !desirable || Math.abs(d) < EPS) return "neutral";
+/**
+ * Colour only follows a direction the engine marks as desirable; contested measures stay neutral, and so
+ * does a change too small to show.
+ */
+export function tone(d: number | null | undefined, desirable: "up" | "down" | null, unit: string): Tone {
+  if (d == null || !desirable || Math.abs(d) < precision(unit)[0]) return "neutral";
   return (d > 0) === (desirable === "up") ? "good" : "bad";
 }
