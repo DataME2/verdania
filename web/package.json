@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "e2e": "playwright test",
-    "test": "node --experimental-strip-types --test lib/safe-next.test.ts lib/sim-request.test.ts lib/portfolio-math.test.ts"
+    "test": "node --experimental-strip-types --test lib/safe-next.test.ts lib/sim-request.test.ts lib/portfolio-math.test.ts lib/format.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

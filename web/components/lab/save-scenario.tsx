@@ -8,7 +8,17 @@ import { GoogleIcon } from "@/components/icons";
 import { t } from "@/lib/messages";
 import type { SimRequest } from "@/lib/sim-request";
 
-export function SaveScenario({ request, signedIn, next }: { request: SimRequest; signedIn: boolean; next: string }) {
+export function SaveScenario({
+  challenge,
+  request,
+  signedIn,
+  next,
+}: {
+  challenge: string;
+  request: SimRequest;
+  signedIn: boolean;
+  next: string;
+}) {
   const [state, action, pending] = useActionState<SaveState, FormData>(saveScenario, {});
 
   if (!signedIn) {
@@ -31,6 +41,7 @@ export function SaveScenario({ request, signedIn, next }: { request: SimRequest;
       <p className="mt-2 text-sm text-ink/70">{t.scenarios.saveLead}</p>
       <form action={action} className="mt-4 space-y-3">
         <input type="hidden" name="request" value={JSON.stringify(request)} />
+        <input type="hidden" name="challenge" value={challenge} />
         <label className="block text-sm font-semibold text-ink/80">
           {t.scenarios.titleLabel}
           <input name="title" maxLength={120} defaultValue={t.scenarios.titleDefault} required

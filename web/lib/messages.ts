@@ -90,13 +90,41 @@ export const t = {
   experiment: {
     eyebrow: "Economic lab",
     title: "Run an experiment",
-    challengeLabel: "Challenge 1",
-    challenge: "Does higher economic growth necessarily reduce poverty?",
-    challengeLead:
-      "Push growth and compare GDP per person with two poverty measures. Anchored poverty uses a fixed line (60% of today's median); relative poverty moves with the median. Do they tell the same story?",
-    tries: [
-      { label: "Growth push", levers: { ig: 0.06, e: 0.06, tau_c: 0.18 } },
-      { label: "Growth push + minimum income", levers: { ig: 0.06, e: 0.06, tau_c: 0.18, gmi: 0.35 } },
+    challengeLabel: (n: number) => `Challenge ${n}`,
+    challengePick: "Choose a challenge",
+    // Each challenge is an open question: its suggested experiments are starting points, never an answer.
+    challenges: [
+      {
+        slug: "growth-and-poverty",
+        question: "Does higher economic growth necessarily reduce poverty?",
+        lead: "Push growth and compare GDP per person with two poverty measures. Anchored poverty uses a fixed line (60% of today's median); relative poverty moves with the median. Do they tell the same story?",
+        tries: [
+          { label: "Growth push", levers: { ig: 0.06, e: 0.06, tau_c: 0.18 } },
+          { label: "Growth push + minimum income", levers: { ig: 0.06, e: 0.06, tau_c: 0.18, gmi: 0.35 } },
+        ],
+        cards: ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "unemployment", "labour_share", "debt_share"],
+      },
+      {
+        slug: "who-pays",
+        question: "Who pays for better public services?",
+        lead: "Raise public health and education spending, then choose how to pay for it: a higher top income-tax rate, a higher VAT rate, or borrowing. Compare who gains by tenth of the population, and what happens to the deficit and debt.",
+        tries: [
+          { label: "Services + top income tax", levers: { m: 0.065, e: 0.055, tau_top: 0.5 } },
+          { label: "Services + VAT", levers: { m: 0.065, e: 0.055, tau_v: 0.18 } },
+          { label: "Services, borrowed", levers: { m: 0.065, e: 0.055 } },
+        ],
+        cards: ["median_income", "poverty_relative", "gini_disposable", "health_access", "human_capital", "gdp_pc", "deficit_share", "debt_share"],
+      },
+      {
+        slug: "ownership",
+        question: "Does who owns capital change who gains?",
+        lead: "Move part of the economy's capital into worker-cooperative or public ownership, and compare wealth concentration, incomes and growth. Former owners are compensated at book value with public bonds, so gross public debt rises.",
+        tries: [
+          { label: "Worker cooperatives (25%)", levers: { s_coop: 0.25 } },
+          { label: "Public ownership (35%)", levers: { s_pub: 0.35 } },
+        ],
+        cards: ["wealth_top10", "wealth_top1", "gini_disposable", "median_income", "poverty_relative", "gdp_pc", "private_investment", "debt_share"],
+      },
     ],
     systems: "Starting rules",
     today: "Verdania today",
@@ -119,6 +147,11 @@ export const t = {
     chart: "Over time",
     whoGains: "Who gains?",
     whoGainsLead: "Disposable income per person (after taxes and transfers), by tenth of the population.",
+    where: "Where it lands",
+    whereLead: (year: number) =>
+      `Each region in year ${year}: your scenario, and the change from the baseline. Every policy applies nationally; regions differ in their jobs, incomes and people.`,
+    whereCaption: (year: number) => `Regional results in year ${year}, with the change from the baseline`,
+    region: "Region",
     why: "Why it changed",
     assumptions: "Assumptions and limits",
     notModelled: "Not modelled yet:",

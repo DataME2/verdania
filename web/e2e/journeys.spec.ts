@@ -41,6 +41,21 @@ test("J2: switching to a preset runs the lab with accounting checks", async ({ p
   clean();
 });
 
+test("Challenges: Challenge 2 brings its own question and suggestions; results show where they land", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/experiment");
+  await page.getByRole("button", { name: "Challenge 2" }).click();
+  await expect(page.getByRole("heading", { name: "Who pays for better public services?" })).toBeVisible();
+  await expect(page).toHaveURL(/challenge=who-pays/);
+  await page.getByRole("button", { name: "Services + VAT" }).click();
+  await expect(page).toHaveURL(/tau_v=0\.18/);
+  await expect(page.getByText("Accounting identities hold")).toBeVisible();
+  const regions = page.getByRole("table", { name: /Regional results/ });
+  await expect(regions.getByRole("row")).toHaveCount(7);
+  await expect(regions.getByRole("row", { name: /Campovera/ })).not.toContainText("—");
+  clean();
+});
+
 test("Challenge this result: an assumption override shows as a chip, travels in the URL and can be undone", async ({ page }) => {
   const clean = watchConsole(page);
   await page.goto("/experiment");
