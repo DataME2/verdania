@@ -14,7 +14,7 @@ FUNCTION="verdania-sim"
 ROLE="verdania-sim-lambda"
 ZIP="dist/verdania-sim-lambda.zip"
 KEY_FILE="${KEY_FILE:-${TEMP:-/tmp}/verdania_prod_sim_key.txt}"
-export AWS_REGION="$REGION" AWS_PAGER=""
+export AWS_REGION="$REGION" AWS_PAGER="" MSYS_NO_PATHCONV=1  # stop Git Bash rewriting /aws/... into C:/...
 aws_() { aws --region "$REGION" "$@"; }
 
 [[ -f "$ZIP" ]] || { echo "missing $ZIP: run deploy/build_lambda.py first"; exit 1; }
@@ -65,9 +65,10 @@ if ! URL=$(aws_ lambda get-function-url-config --function-name "$FUNCTION" --que
   echo "created function URL"
 fi
 
-# --- logs: keep two weeks
+# --- logs: keep two weeks (optional: needs logs:PutRetentionPolicy, which a narrow deploy user may lack)
 aws_ logs create-log-group --log-group-name "/aws/lambda/$FUNCTION" 2>/dev/null || true
-aws_ logs put-retention-policy --log-group-name "/aws/lambda/$FUNCTION" --retention-in-days 14
+aws_ logs put-retention-policy --log-group-name "/aws/lambda/$FUNCTION" --retention-in-days 14 2>/dev/null \
+  || echo "note: could not set log retention (permission); logs keep the AWS default"
 
 URL="${URL%/}"
 echo "health: $(curl -s "$URL/v1/health")"

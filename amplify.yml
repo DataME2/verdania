@@ -11,8 +11,13 @@ applications:
         build:
           commands:
             # Amplify passes environment variables to the build only. Server-side code (SSR, API routes,
-            # middleware) reads them at runtime from .env.production, so copy the ones it needs there.
-            - env | grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY|SITE_URL|SIM_URL|SIM_API_KEY)=' >> .env.production
+            # middleware) reads them at runtime from .env.production, so copy the ones it needs there,
+            # and stop with a clear message if one is missing (set them in Amplify > Hosting > Environment variables).
+            - |
+              for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY SITE_URL SIM_URL SIM_API_KEY; do
+                if [ -z "${!v}" ]; then echo "Missing environment variable: $v"; exit 1; fi
+                echo "$v=${!v}" >> .env.production
+              done
             - npm run build
       artifacts:
         baseDirectory: .next
