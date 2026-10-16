@@ -119,7 +119,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
             [t.market.total, portfolio.initial],
           ].map(([k, v]) => (
             <div key={k as string} className="rounded-2xl bg-cream p-3">
-              <dt className="text-xs text-ink/60">{k}</dt>
+              <dt className="text-xs text-ink/70">{k}</dt>
               <dd className="font-display text-xl font-semibold tabular-nums text-forest">{money(v as number)}</dd>
             </div>
           ))}
@@ -134,7 +134,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
               <li key={a.projectId} className="grid gap-2 py-3 sm:grid-cols-[1fr_minmax(200px,260px)] sm:items-start">
                 <div>
                   <p className="text-sm font-semibold text-ink">{byId[a.projectId]?.title ?? "Project"}</p>
-                  <p className="text-xs tabular-nums text-ink/60">{money(a.units)}</p>
+                  <p className="text-xs tabular-nums text-ink/70">{money(a.units)}</p>
                 </div>
                 <MoveForm requestId={randomUUID()} from={a.projectId} max={a.units} label={t.market.withdraw} idPrefix={`wd-${a.projectId}`} />
               </li>
@@ -159,7 +159,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
             {proj.invested ? t.market.value(money(proj.value.low), money(proj.value.central), money(proj.value.high)) : "—"}
           </p>
           <p className="mt-1 text-sm text-ink/70">{proj.invested ? t.market.jobs(proj.jobs.toFixed(1)) : t.market.noHoldings}</p>
-          <p className="mt-3 text-xs text-ink/60">{t.market.projectionNote}</p>
+          <p className="mt-3 text-xs text-ink/70">{t.market.projectionNote}</p>
         </section>
 
         <section className="rounded-[2rem] bg-white p-6 shadow-soft" aria-labelledby="activity-title">
@@ -170,7 +170,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
                 <span className="text-ink/80">
                   {t.market.entry[e.type]} {e.projectId ? byId[e.projectId]?.title ?? "a project" : "the market"}
                 </span>
-                <span className="shrink-0 tabular-nums text-ink/60">{money(e.units)}</span>
+                <span className="shrink-0 tabular-nums text-ink/70">{money(e.units)}</span>
               </li>
             ))}
           </ul>
@@ -195,7 +195,7 @@ function Dashboard({ totals, byId }: { totals: ProjectTotal[]; byId: Record<stri
             <li key={x.projectId}>
               <div className="flex justify-between gap-3 text-sm">
                 <span className="font-semibold text-ink">
-                  {byId[x.projectId]?.title} <span className="font-normal text-ink/60">· {CATEGORY[x.category] ?? x.category}</span>
+                  {byId[x.projectId]?.title} <span className="font-normal text-ink/70">· {CATEGORY[x.category] ?? x.category}</span>
                 </span>
                 <span className="shrink-0 tabular-nums text-ink/70">{money(x.units)} · {x.participants} people</span>
               </div>

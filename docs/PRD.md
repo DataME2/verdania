@@ -136,23 +136,23 @@ Browser (Next.js app, TypeScript)
 
 ## 8. MVP acceptance criteria (brief §14 + §18) → how they are verified
 
-| # | Criterion | Verified by |
-|---|---|---|
-| 1 | Engaging, animated homepage presenting Verdania as a fictional research experiment | Design approval; Playwright smoke test; reduced-motion snapshot |
-| 2 | Working JS interactions on the main journeys | Playwright: J1, J2, J4 |
-| 3 | ≥ 3 configurable scenarios (A–D target) | Presets seeded; Lab test switches presets |
-| 4 | Functioning interactive policy experiment | Engine tests + J1/J2 end-to-end |
-| 5 | Output and distribution side by side | Lab layout test |
-| 6 | Gini and disposable income computed consistently | Engine tests 1–8 (model spec §10) |
-| 7 | Assumptions explained; simulated vs empirical separated | Methodology page; `data_kind` checks |
-| 8 | Save and reproduce scenarios | J3 test: reproduce gives identical hash and output |
-| 9 | No real financial transactions | No payment dependencies (CI check); virtual-units copy check |
-| 10 | Server-validated virtual balances | `supabase/checks/10_rls_and_ledger.sql` |
-| 11 | Supabase Postgres primary DB; Google sign-in | Deployed configuration; auth e2e |
-| 12 | Explore without registering | Anonymous e2e |
-| 13 | RLS + protected server operations | Checks against local and production |
-| 14 | Accessible, responsive, motion alternatives | axe-core in CI; manual keyboard and mobile pass |
-| 15 | Automated tests for auth, permissions, economics | CI pipeline covering all of the above |
+| # | Criterion | Verified by | Status (2026-10-16) |
+|---|---|---|---|
+| 1 | Engaging, animated homepage presenting Verdania as a fictional research experiment | Design approval; Playwright smoke test; reduced-motion snapshot | ✅ approved in M1; `web/e2e`: J1 and reduced-motion test |
+| 2 | Working JS interactions on the main journeys | Playwright: J1, J2, J4 | ✅ `web/e2e/journeys.spec.ts` |
+| 3 | ≥ 3 configurable scenarios (A–D target) | Presets seeded; Lab test switches presets | ✅ A–D seeded; J2 switches to C |
+| 4 | Functioning interactive policy experiment | Engine tests + J1/J2 end-to-end | ✅ |
+| 5 | Output and distribution side by side | Lab layout test | ✅ J2 checks "Over time" and "Who gains?" |
+| 6 | Gini and disposable income computed consistently | Engine tests 1–8 (model spec §10) | ✅ `sim/tests` |
+| 7 | Assumptions explained; simulated vs empirical separated | Methodology page; `data_kind` checks | ✅ `/methodology` from the registry (J5); empirical rows counted live |
+| 8 | Save and reproduce scenarios | J3 test: reproduce gives identical hash and output | ✅ engine test 7; live engine gives identical fingerprints; production save path checked (rolled back). Sign-in can't be automated, so the UI save is checked by the owner |
+| 9 | No real financial transactions | No payment dependencies (CI check); virtual-units copy check | ✅ CI step |
+| 10 | Server-validated virtual balances | `supabase/checks/10_rls_and_ledger.sql` | ✅ and the owner's production portfolio balances |
+| 11 | Supabase Postgres primary DB; Google sign-in | Deployed configuration; auth e2e | ✅ owner signed in on production |
+| 12 | Explore without registering | Anonymous e2e | ✅ every e2e test runs anonymously |
+| 13 | RLS + protected server operations | Checks against local and production | ✅ production: RLS on every table, no anonymous write grants, no private rows readable anonymously |
+| 14 | Accessible, responsive, motion alternatives | axe-core in CI; manual keyboard and mobile pass | ✅ axe WCAG 2.2 AA on 7 pages, 360 px on 7 pages, mobile drawer, skip link; a full manual screen-reader pass is still worth doing before wider launch |
+| 15 | Automated tests for auth, permissions, economics | CI pipeline covering all of the above | ✅ `.github/workflows/ci.yml` (end-to-end steps run once the repository variables are set) |
 
 ## 9. Open decisions (owner: project lead)
 

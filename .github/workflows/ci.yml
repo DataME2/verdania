@@ -1,0 +1,79 @@
+# Every check from PRD §8, on every pull request and on main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: Engine (accounting identities, calibration, determinism)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run pytest -q
+
+  database:
+    name: Database (migrations, RLS, virtual ledger)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm i --no-save --no-package-lock @electric-sql/pglite
+      - run: node supabase/checks/run.mjs
+
+  web:
+    name: Website (lint, unit, build, end-to-end, accessibility)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      # Public values (the publishable key is meant for browsers). Kept as repository variables so that
+      # pull requests from forks, which don't receive them, skip the end-to-end steps instead of failing.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SITE_URL: http://localhost:3000
+      SIM_URL: http://127.0.0.1:8000
+      SIM_API_KEY: ci-only-engine-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: No payment, trading or crypto libraries (virtual capital only)
+        run: "! grep -iE '\"(@stripe/[a-z-]+|stripe|paypal[a-z-]*|braintree|adyen[a-z-]*|plaid|coinbase[a-z-]*|ethers|web3)[\"<>=~^ ]' package.json ../sim/pyproject.toml"
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: No server secrets in the browser bundle
+        run: "! grep -rlE 'sb_secret_|service_role|SIM_API_KEY|ci-only-engine-key' .next/static"
+
+      - uses: astral-sh/setup-uv@v6
+        if: vars.NEXT_PUBLIC_SUPABASE_URL != ''
+      - name: Start the engine and the website
+        if: vars.NEXT_PUBLIC_SUPABASE_URL != ''
+        run: |
+          (cd ../sim && uv run uvicorn verdania_sim.api:app --port 8000 > /tmp/engine.log 2>&1 &)
+          (npm start > /tmp/web.log 2>&1 &)
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/v1/health > /dev/null && curl -sf -o /dev/null http://localhost:3000/ && exit 0
+            sleep 2
+          done
+          cat /tmp/engine.log /tmp/web.log; exit 1
+      - name: End-to-end journeys, axe (WCAG 2.2 AA) and 360 px checks
+        if: vars.NEXT_PUBLIC_SUPABASE_URL != ''
+        run: npx playwright install --with-deps chromium && npm run e2e

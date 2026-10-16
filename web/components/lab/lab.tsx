@@ -142,7 +142,7 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
         <div className="rounded-[2rem] bg-white p-5 shadow-soft">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl font-semibold text-forest">{t.experiment.levers}</h2>
-            <span className="text-xs font-bold text-ink/60" aria-live="polite">{t.experiment.changed(changed)}</span>
+            <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.experiment.changed(changed)}</span>
           </div>
           {GROUPS.map(([group, codes]) => (
             <fieldset key={group} className="mt-5">
@@ -186,9 +186,9 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
       <div className="min-w-0 space-y-6" aria-busy={loading}>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="font-display text-3xl font-semibold text-forest">
-            {t.experiment.results} <span className="text-lg text-ink/60">· {t.experiment.at(h)}</span>
+            {t.experiment.results} <span className="text-lg text-ink/70">· {t.experiment.at(h)}</span>
           </h2>
-          <p className="text-xs font-semibold text-ink/60" aria-live="polite">
+          <p className="text-xs font-semibold text-ink/70" aria-live="polite">
             {loading ? t.lab.recalculating : data ? `Model v${data.model_version} · ${data.uncertainty.draws} draws · not a forecast` : ""}
           </p>
         </div>
@@ -256,7 +256,7 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
                   {data.mechanisms.map((m) => (
                     <li key={m.lever}>
                       <strong>{byCode[m.lever]?.label ?? t.experiment.closure}</strong>: {m.explanation}{" "}
-                      <span className="text-ink/60">
+                      <span className="text-ink/70">
                         ({m.effects.map((e) => `${data.indicators[e.indicator]?.label}: ${fmtDelta(e.delta_at_horizon, data.indicators[e.indicator]?.unit ?? "index")}`).join("; ")})
                       </span>
                     </li>
@@ -273,7 +273,7 @@ export function Lab({ levers, presets, signedIn }: { levers: Lever[]; presets: P
               <p className="mt-3 text-sm text-ink/70">
                 <strong>{t.experiment.notModelled}</strong> {data.not_modelled.join(", ")}.
               </p>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-ink/60">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-ink/70">
                 {data.accounting_checks.passed && (
                   <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-leaf" aria-hidden="true" /> {t.experiment.accounting}</span>
                 )}

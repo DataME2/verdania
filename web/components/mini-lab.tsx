@@ -63,7 +63,7 @@ export function MiniLab({ levers }: { levers: Lever[] }) {
         <details className="mt-4 rounded-2xl bg-white p-5">
           <summary className="cursor-pointer font-bold text-forest">{t.lab.why}</summary>
           {sim.status !== "ready" ? (
-            <p className="mt-3 text-sm text-ink/60">{t.lab.recalculating}</p>
+            <p className="mt-3 text-sm text-ink/70">{t.lab.recalculating}</p>
           ) : sim.data.mechanisms.length === 0 ? (
             <p className="mt-3 text-sm text-ink/70">{t.lab.noChange}</p>
           ) : (
@@ -71,7 +71,7 @@ export function MiniLab({ levers }: { levers: Lever[] }) {
               {sim.data.mechanisms.map((m) => (
                 <li key={m.lever}>
                   {m.explanation}{" "}
-                  <span className="text-ink/60">
+                  <span className="text-ink/70">
                     (
                     {m.effects
                       .map((e) => `${sim.data.indicators[e.indicator]?.label ?? e.indicator}: ${fmtDelta(e.delta_at_horizon, sim.data.indicators[e.indicator]?.unit ?? "index")}`)
@@ -83,7 +83,7 @@ export function MiniLab({ levers }: { levers: Lever[] }) {
             </ul>
           )}
         </details>
-        <p className="mt-3 text-[11px] text-ink/60">
+        <p className="mt-3 text-[11px] text-ink/70">
           {sim.status === "ready" ? t.lab.footnote(sim.data.model_version, sim.data.uncertainty.draws) : t.lab.recalculating}
         </p>
       </div>

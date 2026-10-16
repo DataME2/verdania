@@ -15,7 +15,7 @@ export function ProjectCard({ project: p, total, action }: { project: Project; t
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-leaf">
         <span>{CATEGORY[p.category] ?? p.category}</span>
         {p.region && (
-          <span className="inline-flex items-center gap-1 text-ink/60">
+          <span className="inline-flex items-center gap-1 text-ink/70">
             <MapPin className="h-3 w-3" aria-hidden="true" /> {p.region}
           </span>
         )}
@@ -30,7 +30,7 @@ export function ProjectCard({ project: p, total, action }: { project: Project; t
           [t.market.privatePart, money(sought)],
         ].map(([k, v]) => (
           <div key={k} className="rounded-xl bg-cream p-2">
-            <dt className="text-ink/60">{k}</dt>
+            <dt className="text-ink/70">{k}</dt>
             <dd className="mt-0.5 font-bold tabular-nums text-forest">{v}</dd>
           </div>
         ))}
@@ -42,9 +42,9 @@ export function ProjectCard({ project: p, total, action }: { project: Project; t
         </h4>
         <p className="mt-1 text-sm">
           <strong className="tabular-nums text-forest">{pct(p.returnCentral)}</strong> {t.market.perYear}{" "}
-          <span className="text-ink/60">({t.market.range(pct(p.returnLow), pct(p.returnHigh))})</span>
+          <span className="text-ink/70">({t.market.range(pct(p.returnLow), pct(p.returnHigh))})</span>
         </p>
-        <p className="mt-1 text-xs text-ink/60">{t.market.risk[p.risk]} · {t.market.years(p.years)}</p>
+        <p className="mt-1 text-xs text-ink/70">{t.market.risk[p.risk]} · {t.market.years(p.years)}</p>
       </section>
 
       <section className="mt-3 rounded-2xl border border-forest/10 p-3" aria-label={t.market.social}>
@@ -72,7 +72,7 @@ export function ProjectCard({ project: p, total, action }: { project: Project; t
             <div className="mt-1 h-2 rounded-full bg-forest/10" role="img" aria-label={`${Math.round(progress * 100)}% ${t.market.progress}`}>
               <div className="h-2 rounded-full bg-vivid" style={{ width: `${progress * 100}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-ink/60">{Math.round(progress * 100)}% {t.market.progress}</p>
+            <p className="mt-1 text-[11px] text-ink/70">{Math.round(progress * 100)}% {t.market.progress}</p>
           </>
         ) : (
           <p>{t.market.tooFew}</p>

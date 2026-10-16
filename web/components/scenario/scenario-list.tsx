@@ -10,7 +10,7 @@ export function ScenarioList({ scenarios, empty, showVisibility = false }: { sce
       {scenarios.map((s) => (
         <li key={s.id} className="py-3">
           <Link href={`/scenarios/${s.id}`} className="font-semibold text-forest hover:text-leaf">{s.title}</Link>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-ink/60">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-ink/70">
             {showVisibility && (
               <span className="inline-flex items-center gap-1">
                 {s.visibility === "public" ? <Globe className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
