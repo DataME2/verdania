@@ -13,6 +13,7 @@ import { DecileChart, LineBandChart } from "./charts";
 import { DeltaChip, IndicatorCard } from "./indicator-card";
 import { LeverSlider } from "./lever-slider";
 import { SaveScenario } from "./save-scenario";
+import { SensitivityPanel } from "./sensitivity";
 import { useSimulation } from "./use-simulation";
 
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
@@ -417,6 +418,8 @@ export function Lab({
                 </ol>
               )}
             </section>
+
+            <SensitivityPanel request={request} />
 
             <section className="rounded-[2rem] border border-forest/10 bg-cream p-6" aria-labelledby="assumptions-title">
               <h3 id="assumptions-title" className="font-display text-xl font-semibold text-forest">{t.experiment.assumptions}</h3>

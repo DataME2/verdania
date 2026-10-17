@@ -161,6 +161,16 @@ export const t = {
       `This path leaves the model's valid range after year ${year} (debt or interest too high). Later years are not shown.`,
     accounting: "Accounting identities hold",
   },
+  sensitivity: {
+    title: "Which assumptions drive this result?",
+    lead: "Each assumption in turn is set to the low and then the high end of its published range, with all the others at their central values. The bars show how much that changes your policy's effect, largest first.",
+    pick: "Effect on",
+    chartTitle: (label: string, year: number) => `Change in your policy's effect on ${label}, year ${year}`,
+    low: "Low end",
+    high: "High end",
+    none: "Change a policy first: with no policy change there is no effect for an assumption to move.",
+    note: "Change any of these under “Challenge this result”.",
+  },
   challenge: {
     title: "Challenge this result",
     lead: "Every result rests on assumptions about how people and firms respond, and economists disagree about many of them. Change any assumption within its published range. Both the baseline and your scenario use your value, and it stays fixed in every uncertainty draw.",

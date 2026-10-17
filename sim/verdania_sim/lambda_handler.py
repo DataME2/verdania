@@ -1,7 +1,8 @@
 """AWS Lambda entry point behind a Function URL. Same contract as api.py, without a web framework,
 so the deployment bundle is this package plus NumPy.
 
-Only interactive runs are served here; full mode (~15-20 s) belongs in a background job.
+Only interactive runs are served here; full mode (~12 s, mostly its 200 draws) belongs in a background
+job. /v1/sensitivity serves full mode's one-at-a-time sensitivity on its own (about a second).
 """
 
 import base64
@@ -33,7 +34,7 @@ def handler(event, context):
     given = (event.get("headers") or {}).get("x-sim-key", "")  # Function URLs lower-case header names
     if not expected or not hmac.compare_digest(given, expected):
         return _resp(401, {"detail": "invalid or missing X-Sim-Key"})
-    if path != "/v1/simulate" or method != "POST":
+    if path not in ("/v1/simulate", "/v1/sensitivity") or method != "POST":
         return _resp(404, {"detail": "not found"})
 
     raw = event.get("body") or "{}"
@@ -51,6 +52,9 @@ def handler(event, context):
         return _resp(422, {"detail": "only interactive mode is served here"})
 
     try:
+        if path == "/v1/sensitivity":
+            return _resp(200, engine.sensitivity(levers=req.get("levers") or {}, preset=req.get("preset"),
+                                                 horizon=req.get("horizon", 10), structural=req.get("structural") or {}))
         result = engine.run(
             levers=req.get("levers") or {},
             preset=req.get("preset"),
