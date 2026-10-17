@@ -225,13 +225,82 @@ export const t = {
     lead: "You only need an account to save scenarios and join the Virtual Investment Market.",
     storeTitle: "What we store",
     store: [
-      "Your Google account's display name and an internal account ID.",
-      "Your profile is private unless you choose to make it public.",
-      "Your scenarios and virtual portfolio are private unless you publish them.",
+      "Your Google name, picture link and email address. Your email is used only to sign you in and is never shown.",
+      "Your profile is private.",
+      "Your scenarios are private unless you publish them. Your virtual portfolio only counts towards totals across all participants.",
       "Google sign-in grants no special permissions. Roles are assigned separately by administrators.",
+      "You can delete your account, and everything in it, at any time.",
     ],
     consent: "By continuing you agree to this use of your data.",
+    privacyLink: "Read the privacy notice",
     noAccount: "Explore without an account",
+  },
+  privacy: {
+    title: "Privacy",
+    footer: "Privacy",
+    updated: "Last updated 17 October 2026",
+    lead: "Verdania runs on synthetic data and virtual capital, so it needs very little about you. You can explore every page without an account.",
+    deleted: "Your account has been deleted, with your profile, scenarios and virtual portfolio.",
+    sections: [
+      {
+        id: "browsing",
+        title: "Browsing without an account",
+        items: [
+          "No account, no profile and no tracking. The site sets no analytics or advertising cookies.",
+          "To stop abuse, the website counts each IP address's requests for a few minutes, in memory. The counts are never stored.",
+        ],
+      },
+      {
+        id: "account",
+        title: "If you sign in with Google",
+        items: [
+          "Supabase, which runs our sign-in, keeps what Google shares: your name, email address and picture link, and when you last signed in. Your email is never shown on the site.",
+          "Your profile holds only a display name and picture link, and it is private.",
+          "The site uses two cookies: one keeps you signed in, and the other remembers for up to ten minutes which page to return you to after you sign in.",
+          "Signing in grants no special permissions. Moderator and researcher roles are given separately.",
+        ],
+      },
+      {
+        id: "scenarios",
+        title: "Scenarios you save",
+        items: [
+          "Saved scenarios are private. If you publish one, the Community page shows its title, notes, assumptions and results, but not your name.",
+          "Moderators can hide a published scenario from the Community page. Each such action is recorded with who did it and why.",
+        ],
+      },
+      {
+        id: "market",
+        title: "The virtual market",
+        items: [
+          "Your portfolio and its history of virtual units are private.",
+          "Public totals add up everyone's choices, and stay hidden until a project has at least five participants.",
+        ],
+      },
+      {
+        id: "suggestions",
+        title: "Ideas and suggestions",
+        items: ["We keep your message, and your name and email if you give them, only to read it and reply. Only the project team, including moderators, reads them."],
+      },
+      {
+        id: "where",
+        title: "Where your data lives",
+        items: [
+          "Supabase holds the database and sign-in. Amazon Web Services in Sydney, Australia, runs the website and the simulation engine. Google handles the sign-in itself.",
+          "These providers keep standard technical logs, such as IP addresses, for a short time to run and secure the service.",
+          "We do not sell your data, show advertising, or share your data with anyone else.",
+        ],
+      },
+    ],
+    choicesTitle: "Your choices",
+    choices: {
+      account: "See your profile, scenarios and virtual portfolio on your account page.",
+      manage: "Unpublish or delete any scenario, and withdraw virtual units, at any time.",
+      delete:
+        "Delete your account from your account page. That removes your sign-in record, profile, roles, every scenario (published ones too) and your virtual portfolio. Suggestions you sent stay, without your name and email. The audit log keeps only your former account ID, which no longer links to anything.",
+      contact: "To have a suggestion deleted, or for any other question about your data, send us a message.",
+    },
+    accountLink: "Your account",
+    contactLink: "Send a message",
   },
   authError: {
     title: "Sign-in didn't complete",
@@ -250,6 +319,14 @@ export const t = {
     portfolio: "Virtual portfolio",
     notJoined: "You haven't joined the virtual market yet.",
     goMarket: "Go to the market",
+    deleteTitle: "Delete your account",
+    deleteLead:
+      "This permanently removes your sign-in record, profile, every scenario (published ones too) and your virtual portfolio. Suggestions you sent stay, without your name and email. It can't be undone.",
+    deleteOpen: "Delete my account…",
+    deleteConfirm: (word: string) => `Type "${word}" to confirm`,
+    deleteWord: "delete",
+    deleteButton: "Delete my account permanently",
+    deleteError: "Your account couldn't be deleted right now. Nothing was removed. Please try again later.",
   },
   market: {
     eyebrow: "Virtual investment market",
@@ -303,7 +380,8 @@ export const t = {
   },
   scenarios: {
     save: "Save this scenario",
-    saveLead: "Saved scenarios are private unless you publish them. The engine re-runs them on demand to prove the results are reproducible.",
+    saveLead: "Saved scenarios are private unless you publish them. Published ones show without your name. The engine re-runs them on demand to prove the results are reproducible.",
+    privacyLink: "How we handle your data",
     titleLabel: "Title",
     titleDefault: "My scenario",
     descriptionLabel: "Notes (optional)",
