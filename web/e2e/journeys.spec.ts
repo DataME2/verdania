@@ -199,6 +199,22 @@ test("Contribute: the footer link reaches the form and its server action answers
   clean();
 });
 
+test("A page left open across a deploy explains itself instead of crashing", async ({ page }) => {
+  await page.goto("/community", { waitUntil: "networkidle" });
+  // The previous deploy's action id, which the new server does not know.
+  await page.route("**/community", (route) => {
+    const headers = route.request().headers();
+    return headers["next-action"] ? route.continue({ headers: { ...headers, "next-action": "60" + "0".repeat(40) } }) : route.continue();
+  });
+  const form = page.locator("#contribute");
+  await form.getByLabel("Your message").fill("Never stored: the action id is unknown.");
+  await form.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByRole("heading", { name: "Verdania was updated while this page was open" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reload the page" })).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toBeVisible(); // the site around it still works
+  await expect(page.getByText("Application error")).toHaveCount(0);
+});
+
 test("Privacy: the footer link reaches the notice, which points to the account page for deletion", async ({ page }) => {
   const clean = watchConsole(page);
   await page.goto("/methodology");

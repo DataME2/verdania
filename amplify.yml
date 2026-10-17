@@ -1,4 +1,7 @@
 # AWS Amplify Hosting build for the website in web/ (monorepo: set AMPLIFY_MONOREPO_APP_ROOT=web in the app).
+# Also set NEXT_SERVER_ACTIONS_ENCRYPTION_KEY (random, 32 bytes, base64) in the app's environment variables:
+# Next salts server-action ids with it, so a fixed key keeps them stable across deploys and pages left open
+# during a deploy can still submit their forms. Next reads it at build time; nothing below needs to copy it.
 version: 1
 applications:
   - appRoot: web
