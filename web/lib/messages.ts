@@ -142,6 +142,8 @@ export const t = {
     closureOptions: { borrow: "Borrow", adjust_other: "Cut other public spending" },
     changed: (n: number) => (n === 0 ? "No levers changed" : `${n} ${n === 1 ? "lever" : "levers"} changed`),
     resetAll: "Reset all levers",
+    adjust: "Adjust the levers",
+    done: "Done",
     results: "Results",
     at: (year: number) => `Year ${year} vs baseline`,
     chart: "Over time",

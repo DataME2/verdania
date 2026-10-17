@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, SlidersHorizontal, X } from "lucide-react";
 import type { Evidence, Lever, Parameter } from "@/lib/data";
 import { fmtDelta, fmtParam, fmtValue } from "@/lib/format";
 import { LEVER_GROUPS } from "@/lib/levers";
@@ -91,6 +91,11 @@ export function Lab({
   const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers, assumptions));
   const [challengeOpen] = useState(() => Object.keys(s.structural).length > 0);
   const [chart, setChart] = useState("");
+  // Below lg the levers live in a bottom sheet over the results (PRD §6); from lg up they sit beside them.
+  const [sheet, setSheet] = useState(false);
+  const barButton = useRef<HTMLButtonElement>(null);
+  const doneButton = useRef<HTMLButtonElement>(null);
+  const cards = useRef<HTMLDivElement>(null);
   const ch = CHALLENGES.find((c) => c.slug === s.challenge)!;
   const shown = (ch.cards as readonly string[]).includes(chart) ? chart : ch.cards[0];
 
@@ -109,6 +114,16 @@ export function Lab({
   useEffect(() => {
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   }, [query]);
+
+  useEffect(() => {
+    if (!sheet) return;
+    cards.current?.scrollIntoView({ block: "start" }); // the numbers stay in sight above the sheet
+    doneButton.current?.focus();
+  }, [sheet]);
+  const closeSheet = () => {
+    setSheet(false);
+    barButton.current?.focus();
+  };
 
   const set = (patch: Partial<State>) => setS((prev) => ({ ...prev, ...patch }));
   const applyPreset = (p: PresetOption) =>
@@ -200,79 +215,108 @@ export function Lab({
           </div>
         </fieldset>
 
-        <div className="rounded-[2rem] bg-white p-5 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold text-forest">{t.experiment.levers}</h2>
-            <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.experiment.changed(changed)}</span>
+        <div
+          id="lab-levers"
+          data-open={sheet || undefined}
+          onKeyDown={(e) => e.key === "Escape" && sheet && closeSheet()}
+          className={`space-y-6 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:max-h-[55dvh] max-lg:space-y-3 max-lg:overflow-y-auto max-lg:overscroll-contain max-lg:rounded-t-[2rem] max-lg:bg-cream max-lg:px-3 max-lg:pb-4 max-lg:shadow-[0_-16px_40px_rgb(0_0_0/0.18)] ${sheet ? "" : "max-lg:hidden"}`}
+        >
+          <div className="sticky top-0 z-10 -mx-3 flex items-center justify-between gap-3 bg-cream px-4 pb-2 pt-3 lg:hidden">
+            <span aria-hidden="true" className="h-1.5 w-10 rounded-full bg-forest/25" />
+            <button ref={doneButton} type="button" onClick={closeSheet} className="min-h-11 rounded-full bg-forest px-5 text-sm font-bold text-white hover:bg-leaf">
+              {t.experiment.done}
+            </button>
           </div>
-          {LEVER_GROUPS.map(([group, codes]) => (
-            <fieldset key={group} className="mt-5">
-              <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.experiment.groups[group]}</legend>
-              <div className="mt-2 space-y-2">
-                {codes.filter((c) => byCode[c]).map((c) => (
-                  <LeverSlider key={c} lever={byCode[c]} value={s.values[c]} onChange={(v) => set({ values: { ...s.values, [c]: v } })} />
-                ))}
-              </div>
+          <div className="rounded-[2rem] bg-white p-5 shadow-soft">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display text-xl font-semibold text-forest">{t.experiment.levers}</h2>
+              <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.experiment.changed(changed)}</span>
+            </div>
+            {LEVER_GROUPS.map(([group, codes]) => (
+              <fieldset key={group} className="mt-5">
+                <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.experiment.groups[group]}</legend>
+                <div className="mt-2 space-y-2">
+                  {codes.filter((c) => byCode[c]).map((c) => (
+                    <LeverSlider key={c} lever={byCode[c]} value={s.values[c]} onChange={(v) => set({ values: { ...s.values, [c]: v } })} />
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+            <fieldset className="mt-5">
+              <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.experiment.groups.fiscal}</legend>
+              <label className="mt-2 block text-sm font-semibold text-ink/80" htmlFor="closure">{t.experiment.closure}</label>
+              <select
+                id="closure"
+                value={s.closure}
+                onChange={(e) => set({ closure: e.target.value })}
+                className={`mt-1 w-full rounded-2xl border bg-white px-3 py-2 text-sm ${s.closure !== "borrow" ? "border-sun ring-2 ring-sun" : "border-forest/20"}`}
+              >
+                {Object.entries(t.experiment.closureOptions).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+              </select>
+              {s.closure === "adjust_other" && byCode.debt_limit && (
+                <div className="mt-2">
+                  <LeverSlider lever={byCode.debt_limit} value={s.values.debt_limit} onChange={(v) => set({ values: { ...s.values, debt_limit: v } })} />
+                </div>
+              )}
             </fieldset>
-          ))}
-          <fieldset className="mt-5">
-            <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.experiment.groups.fiscal}</legend>
-            <label className="mt-2 block text-sm font-semibold text-ink/80" htmlFor="closure">{t.experiment.closure}</label>
-            <select
-              id="closure"
-              value={s.closure}
-              onChange={(e) => set({ closure: e.target.value })}
-              className={`mt-1 w-full rounded-2xl border bg-white px-3 py-2 text-sm ${s.closure !== "borrow" ? "border-sun ring-2 ring-sun" : "border-forest/20"}`}
-            >
-              {Object.entries(t.experiment.closureOptions).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-            </select>
-            {s.closure === "adjust_other" && byCode.debt_limit && (
-              <div className="mt-2">
-                <LeverSlider lever={byCode.debt_limit} value={s.values.debt_limit} onChange={(v) => set({ values: { ...s.values, debt_limit: v } })} />
-              </div>
-            )}
-          </fieldset>
-          <button
-            type="button"
-            onClick={() => applyPreset(today)}
-            disabled={changed === 0}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest disabled:opacity-40"
-          >
-            <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.experiment.resetAll}
-          </button>
-        </div>
-
-        {assumptions.length > 0 && (
-          <details className="rounded-[2rem] bg-white p-5 shadow-soft" open={challengeOpen}>
-            <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="font-display text-xl font-semibold text-forest">{t.challenge.title}</span>
-              <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.challenge.changed(overrides.length)}</span>
-            </summary>
-            <p className="mt-3 text-sm text-ink/70">{t.challenge.lead}</p>
-            {EVIDENCE.map((ev) => {
-              const group = assumptions.filter((a) => a.evidence === ev);
-              return group.length ? (
-                <fieldset key={ev} className="mt-5">
-                  <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.methodology.evidence[ev].label}</legend>
-                  <p className="mt-1 text-[11px] text-ink/70">{t.methodology.evidence[ev].text}</p>
-                  <div className="mt-2 space-y-2">
-                    {group.map((a) => (
-                      <LeverSlider key={a.code} lever={a} assumption value={s.structural[a.code] ?? a.base} onChange={(v) => setAssumption(a, v)} />
-                    ))}
-                  </div>
-                </fieldset>
-              ) : null;
-            })}
             <button
               type="button"
-              onClick={() => set({ structural: {} })}
-              disabled={overrides.length === 0}
+              onClick={() => applyPreset(today)}
+              disabled={changed === 0}
               className="mt-6 inline-flex items-center gap-2 rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest disabled:opacity-40"
             >
-              <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.challenge.reset}
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.experiment.resetAll}
             </button>
-          </details>
-        )}
+          </div>
+  
+          {assumptions.length > 0 && (
+            <details className="rounded-[2rem] bg-white p-5 shadow-soft" open={challengeOpen}>
+              <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <span className="font-display text-xl font-semibold text-forest">{t.challenge.title}</span>
+                <span className="text-xs font-bold text-ink/70" aria-live="polite">{t.challenge.changed(overrides.length)}</span>
+              </summary>
+              <p className="mt-3 text-sm text-ink/70">{t.challenge.lead}</p>
+              {EVIDENCE.map((ev) => {
+                const group = assumptions.filter((a) => a.evidence === ev);
+                return group.length ? (
+                  <fieldset key={ev} className="mt-5">
+                    <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.methodology.evidence[ev].label}</legend>
+                    <p className="mt-1 text-[11px] text-ink/70">{t.methodology.evidence[ev].text}</p>
+                    <div className="mt-2 space-y-2">
+                      {group.map((a) => (
+                        <LeverSlider key={a.code} lever={a} assumption value={s.structural[a.code] ?? a.base} onChange={(v) => setAssumption(a, v)} />
+                      ))}
+                    </div>
+                  </fieldset>
+                ) : null;
+              })}
+              <button
+                type="button"
+                onClick={() => set({ structural: {} })}
+                disabled={overrides.length === 0}
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest disabled:opacity-40"
+              >
+                <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t.challenge.reset}
+              </button>
+            </details>
+          )}
+        </div>
+      </div>
+
+      <div id="lever-bar" className="fixed inset-x-0 bottom-0 z-30 border-t border-forest/10 bg-cream/95 px-4 py-3 backdrop-blur lg:hidden">
+        <button
+          ref={barButton}
+          type="button"
+          aria-expanded={sheet}
+          aria-controls="lab-levers"
+          onClick={() => setSheet(true)}
+          className="flex min-h-12 w-full items-center justify-between gap-3 rounded-full bg-forest px-5 font-bold text-white"
+        >
+          <span className="inline-flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" /> {t.experiment.adjust}
+          </span>
+          <span className="text-xs font-semibold text-sage">{t.experiment.changed(changed)}</span>
+        </button>
       </div>
 
       {/* ------------------------------------------------------------ results */}
@@ -323,7 +367,7 @@ export function Lab({
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4" aria-live="polite">
+        <div ref={cards} className="grid scroll-mt-24 gap-4 sm:grid-cols-2 2xl:grid-cols-4" aria-live="polite">
           {sim.status !== "error" &&
             ch.cards.map((c) => <IndicatorCard key={c} indicator={data?.indicators[c]} year={h} loading={loading} />)}
         </div>
