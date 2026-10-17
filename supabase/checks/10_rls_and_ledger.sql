@@ -248,5 +248,61 @@ do $$ begin
   raise exception 'FAIL: the hourly cap was not enforced';
 exception when sqlstate '54000' then null; end $$;
 
+-- ------------------------------------------------------------ moderation
+reset role;
+insert into public.user_roles (user_id, role) values (test.u(4), 'moderator'); -- bootstrap, service side
+create table test.ids as select id, title from public.simulation_scenarios;
+grant select on test.ids to authenticated;
+set role authenticated;
+select test.as_user(2); -- Ben: no staff role
+select test.ok(not public.is_moderator(), 'Ben is not staff');
+do $$ begin
+  perform public.list_suggestions();
+  raise exception 'FAIL: a non-moderator listed suggestions';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  perform public.moderate_scenario((select id from test.ids where title = 'Ana public'), 'hidden', 'spam');
+  raise exception 'FAIL: a non-moderator hid a scenario';
+exception when insufficient_privilege then null; end $$;
+select test.as_user(1); -- Ana is a researcher, which is not a moderation role
+select test.ok(not public.is_moderator(), 'a researcher is not staff');
+
+select test.as_user(4); -- moderator
+select test.ok((select count(*) from public.list_suggestions(500)) = 200, 'a moderator lists suggestions');
+select public.set_suggestion_status((select id from public.list_suggestions(500) where topic = 'data'), 'done');
+do $$ begin
+  perform public.set_suggestion_status((select id from public.list_suggestions(500) where topic = 'data'), 'archived');
+  raise exception 'FAIL: an unknown status was accepted';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform public.moderate_scenario((select id from test.ids where title = 'Ana public'), 'hidden', '');
+  raise exception 'FAIL: hidden without a reason';
+exception when invalid_parameter_value then null; end $$;
+select public.moderate_scenario((select id from test.ids where title = 'Ana public'), 'hidden', 'test of moderation');
+select test.ok((select moderation_status from public.list_published_scenarios() where title = 'Ana public') = 'hidden',
+               'staff still see a hidden scenario, to restore it');
+select test.ok(not exists (select 1 from public.list_published_scenarios() where title = 'Ana private'), 'staff never see private scenarios');
+do $$ begin
+  perform public.moderate_scenario((select id from test.ids where title = 'Ana private'), 'hidden', 'not allowed');
+  raise exception 'FAIL: a private scenario was moderated';
+exception when no_data_found then null; end $$;
+select test.ok((select count(*) from public.audit_logs) = 0, 'the audit log stays admin-only');
+
+set role anon;
+select test.as_user(null);
+select test.ok((select count(*) from public.simulation_scenarios) = 0, 'a hidden scenario disappears from public view');
+do $$ begin
+  perform public.list_published_scenarios();
+  raise exception 'FAIL: anon called a moderation function';
+exception when insufficient_privilege then null; end $$;
+
+reset role;
+select test.ok((select count(*) from public.audit_logs where action in ('scenario.moderated', 'suggestion.status')) = 2,
+               'every moderation action is audited');
+select test.ok((select (actor_id, details ->> 'reason') = (test.u(4), 'test of moderation') from public.audit_logs
+                where action = 'scenario.moderated'), 'the audit log keeps who and why');
+select test.ok((select status from public.suggestions where topic = 'data') = 'done', 'the suggestion was triaged');
+drop table test.ids;
+
 reset role;
 select 'ALL CHECKS PASSED' as result;

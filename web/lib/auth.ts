@@ -22,3 +22,10 @@ export async function getViewer(): Promise<Viewer | null> {
     isPublic: profile?.is_public ?? false,
   };
 }
+
+/** Staff (admin or moderator) and admin flags for the signed-in visitor; the database decides. */
+export async function getStaff(): Promise<{ moderator: boolean; admin: boolean }> {
+  const supabase = await createClient();
+  const [mod, admin] = await Promise.all([supabase.rpc("is_moderator"), supabase.rpc("has_role", { p_role: "admin" })]);
+  return { moderator: mod.data === true, admin: admin.data === true };
+}

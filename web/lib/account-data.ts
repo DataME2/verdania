@@ -58,6 +58,7 @@ export type Scenario = ScenarioSummary & {
   levers: Record<string, number | string>;
   structural: Record<string, number>;
   challenge: string | null;
+  hidden: boolean;
   modelVersion: string;
   outputHash: string | null;
   inputHash: string | null;
@@ -71,7 +72,7 @@ export async function getScenario(id: string): Promise<Scenario | null> {
   const [{ data }, { data: claims }] = await Promise.all([
     supabase
       .from("simulation_scenarios")
-      .select("id, owner_id, title, description, horizon, visibility, created_at, published_at, levers, structural_overrides, challenge_slug, model_version, input_hash, output_hash")
+      .select("id, owner_id, title, description, horizon, visibility, created_at, published_at, levers, structural_overrides, challenge_slug, moderation_status, model_version, input_hash, output_hash")
       .eq("id", id)
       .maybeSingle(),
     supabase.auth.getClaims(),
@@ -82,6 +83,7 @@ export async function getScenario(id: string): Promise<Scenario | null> {
     levers: data.levers,
     structural: data.structural_overrides ?? {},
     challenge: data.challenge_slug,
+    hidden: data.moderation_status === "hidden",
     modelVersion: data.model_version,
     inputHash: data.input_hash,
     outputHash: data.output_hash,

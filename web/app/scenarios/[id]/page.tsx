@@ -53,6 +53,9 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-forest sm:text-5xl">{scenario.title}</h1>
           {challenge && <p className="mt-2 text-sm font-semibold text-leaf">{challenge.question}</p>}
+          {scenario.isOwner && scenario.hidden && (
+            <p role="status" className="mt-3 rounded-2xl border border-sun bg-sun/15 p-3 text-sm text-ink">{t.admin.hiddenNote}</p>
+          )}
           {scenario.description && <p className="mt-3 max-w-3xl whitespace-pre-line text-ink/80">{scenario.description}</p>}
         </header>
 
