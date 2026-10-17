@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { signOut } from "@/app/auth/actions";
 import { ScenarioList } from "@/components/scenario/scenario-list";
 import { getMyScenarios, getPortfolio } from "@/lib/account-data";
-import { getViewer } from "@/lib/auth";
+import { getStaff, getViewer } from "@/lib/auth";
 import { fmtValue } from "@/lib/format";
 import { t } from "@/lib/messages";
 
@@ -28,11 +28,16 @@ async function Account() {
   // The page checks the session itself; middleware.ts only provides the friendly redirect.
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/account");
-  const [portfolio, scenarios] = await Promise.all([getPortfolio(), getMyScenarios()]);
+  const [portfolio, scenarios, staff] = await Promise.all([getPortfolio(), getMyScenarios(), getStaff()]);
   const allocated = portfolio?.allocations.reduce((s, a) => s + a.units, 0) ?? 0;
 
   return (
     <>
+      {staff.moderator && (
+        <Link href="/admin" className="inline-flex rounded-full bg-forest px-5 py-2 text-sm font-bold text-white hover:bg-leaf">
+          {t.admin.title}
+        </Link>
+      )}
       <div className="rounded-[2rem] bg-white p-8 shadow-soft">
         <dl className="divide-y divide-forest/10 rounded-2xl border border-forest/10">
           <Row label="Name" value={viewer.displayName} />

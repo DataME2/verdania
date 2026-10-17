@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Pages that need an account. Each page also re-checks the session itself; this is the friendly redirect.
-const PRIVATE = ["/account"];
+const PRIVATE = ["/account", "/admin"];
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 

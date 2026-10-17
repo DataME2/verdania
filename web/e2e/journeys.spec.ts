@@ -186,6 +186,8 @@ test("Economic Systems: every policy compared with today, and the ten-year resul
 test("private pages send anonymous visitors to sign-in and back", async ({ page }) => {
   await page.goto("/account");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Faccount$/);
+  await page.goto("/admin"); // staff-only beyond that: checked by the database (supabase/checks)
+  await expect(page).toHaveURL(/\/sign-in\?next=%2Fadmin$/);
 });
 
 test("reduced motion stops the animations", async ({ page }) => {
