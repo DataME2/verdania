@@ -57,57 +57,61 @@ export default async function PeoplePage() {
           <>
             <div className="mt-12 grid gap-6 lg:grid-cols-2">
               <Card id="age" title={p.age} lead={p.ageLead}>
-                <table className="w-full text-left text-sm tabular-nums">
-                  <caption className="sr-only">{p.ageCaption}</caption>
-                  <thead>
-                    <tr className="border-b border-forest/15 text-xs text-ink/70">
-                      <th scope="col" className="py-2 pr-3 font-bold">{p.group}</th>
-                      <th scope="col" className="py-2 pr-3 font-bold">{p.women}</th>
-                      <th scope="col" className="py-2 pr-3 font-bold">{p.men}</th>
-                      <th scope="col" className="py-2 font-bold">{p.share}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-forest/10">
-                    {AGES.map((a) => {
-                      const all = count((c) => c.age === a);
-                      return (
-                        <tr key={a}>
-                          <th scope="row" className="py-2.5 pr-3 font-semibold text-ink/80">{p.bands[a]}</th>
-                          <td className="py-2.5 pr-3">{int(count((c) => c.age === a && c.gender === "female"))}</td>
-                          <td className="py-2.5 pr-3">{int(count((c) => c.age === a && c.gender === "male"))}</td>
-                          <td className="py-2.5">
-                            <Bar value={all / total} />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="relative overflow-x-auto" role="region" aria-labelledby="age" tabIndex={0}>
+                  <table className="w-full text-left text-sm tabular-nums">
+                    <caption className="sr-only">{p.ageCaption}</caption>
+                    <thead>
+                      <tr className="border-b border-forest/15 text-xs text-ink/70">
+                        <th scope="col" className="py-2 pr-3 font-bold">{p.group}</th>
+                        <th scope="col" className="py-2 pr-3 font-bold">{p.women}</th>
+                        <th scope="col" className="py-2 pr-3 font-bold">{p.men}</th>
+                        <th scope="col" className="py-2 font-bold">{p.share}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-forest/10">
+                      {AGES.map((a) => {
+                        const all = count((c) => c.age === a);
+                        return (
+                          <tr key={a}>
+                            <th scope="row" className="py-2.5 pr-3 font-semibold text-ink/80">{p.bands[a]}</th>
+                            <td className="py-2.5 pr-3">{int(count((c) => c.age === a && c.gender === "female"))}</td>
+                            <td className="py-2.5 pr-3">{int(count((c) => c.age === a && c.gender === "male"))}</td>
+                            <td className="py-2.5">
+                              <Bar value={all / total} />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </Card>
 
               <Card id="education" title={p.education} lead={p.educationLead}>
-                <table className="w-full text-left text-sm tabular-nums">
-                  <caption className="sr-only">{p.educationCaption}</caption>
-                  <thead>
-                    <tr className="border-b border-forest/15 text-xs text-ink/70">
-                      <th scope="col" className="py-2 pr-3 font-bold">{p.level}</th>
-                      <th scope="col" className="py-2 pr-3 font-bold">{p.bands["15-64"]}</th>
-                      <th scope="col" className="py-2 font-bold">{p.bands["65+"]}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-forest/10">
-                    {LEVELS.map((l) => (
-                      <tr key={l}>
-                        <th scope="row" className="py-2.5 pr-3 font-semibold text-ink/80">{p.levels[l]}</th>
-                        {["15-64", "65+"].map((a) => (
-                          <td key={a} className="py-2.5 pr-3">
-                            <Bar value={count((c) => c.age === a && c.education === l) / count((c) => c.age === a)} />
-                          </td>
-                        ))}
+                <div className="relative overflow-x-auto" role="region" aria-labelledby="education" tabIndex={0}>
+                  <table className="w-full text-left text-sm tabular-nums">
+                    <caption className="sr-only">{p.educationCaption}</caption>
+                    <thead>
+                      <tr className="border-b border-forest/15 text-xs text-ink/70">
+                        <th scope="col" className="py-2 pr-3 font-bold">{p.level}</th>
+                        <th scope="col" className="py-2 pr-3 font-bold">{p.bands["15-64"]}</th>
+                        <th scope="col" className="py-2 font-bold">{p.bands["65+"]}</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-forest/10">
+                      {LEVELS.map((l) => (
+                        <tr key={l}>
+                          <th scope="row" className="py-2.5 pr-3 font-semibold text-ink/80">{p.levels[l]}</th>
+                          {["15-64", "65+"].map((a) => (
+                            <td key={a} className="py-2.5 pr-3">
+                              <Bar value={count((c) => c.age === a && c.education === l) / count((c) => c.age === a)} />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Card>
             </div>
 
@@ -174,7 +178,7 @@ export default async function PeoplePage() {
 
 function Card({ id, title, lead, children }: { id: string; title: string; lead: string; children: ReactNode }) {
   return (
-    <section className="h-full rounded-[2rem] border border-forest/10 bg-white p-6 lg:p-8" aria-labelledby={id}>
+    <section className="h-full min-w-0 rounded-[2rem] border border-forest/10 bg-white p-6 lg:p-8" aria-labelledby={id}>
       <h2 id={id} className="font-display text-3xl font-semibold text-forest">{title}</h2>
       <p className="mt-2 text-sm text-ink/70">{lead}</p>
       <div className="mt-5">{children}</div>
