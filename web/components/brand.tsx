@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 
-export function Brand({ inverse = false }: { inverse?: boolean }) {
+export async function Brand({ inverse = false }: { inverse?: boolean }) {
+  const t = await getT();
   return (
     <Link href="/" className="flex items-center gap-3 rounded-full" aria-label={t.brand.home}>
       <span className={`grid h-11 w-11 place-items-center rounded-full ${inverse ? "bg-cream" : "bg-white"} shadow-sm`}>

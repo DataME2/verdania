@@ -8,22 +8,26 @@ import { VerifyButton } from "@/components/scenario/verify-button";
 import { getScenario, scenarioRequest } from "@/lib/account-data";
 import { getLevers, getMethodology } from "@/lib/data";
 import { fmtLever, fmtParam } from "@/lib/format";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { localizeParams } from "@/lib/localize";
+import { INTL } from "@/lib/locale";
 import { runSimulation } from "@/lib/sim";
+import { localized } from "@/lib/sim-localized";
 
 const CARDS = ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "debt_share"];
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const s = await getScenario((await params).id);
-  return { title: s?.title ?? "Scenario", robots: s?.visibility === "public" ? undefined : { index: false } };
+  const [s, t] = await Promise.all([params.then(({ id }) => getScenario(id)), getT()]);
+  return { title: s?.title ?? t.scenarios.fallbackTitle, robots: s?.visibility === "public" ? undefined : { index: false } };
 }
 
 export default async function ScenarioPage({ params }: { params: Promise<{ id: string }> }) {
   const scenario = await getScenario((await params).id);
   if (!scenario) notFound(); // missing, or private and not yours: the database returns nothing either way
 
-  const [levers, methodology] = await Promise.all([getLevers(scenario.modelVersion), getMethodology(scenario.modelVersion)]);
-  const overrides = (methodology.parameters ?? []).filter((p) => p.kind === "structural" && p.code in scenario.structural);
+  const [storedLevers, methodology, t, locale] = await Promise.all([getLevers(scenario.modelVersion), getMethodology(scenario.modelVersion), getT(), getLocale()]);
+  const levers = localizeParams(storedLevers, t);
+  const overrides = localizeParams(methodology.parameters ?? [], t).filter((p) => p.kind === "structural" && p.code in scenario.structural);
   const changed = levers.filter((l) => typeof scenario.levers[l.code] === "number" && Math.abs(Number(scenario.levers[l.code]) - l.base) > 1e-9);
   const closureChanged = scenario.levers.closure && scenario.levers.closure !== "borrow";
   const lab = new URLSearchParams(changed.map((l) => [l.code, String(scenario.levers[l.code])]));
@@ -34,7 +38,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
   for (const [k, v] of Object.entries(scenario.structural)) lab.set(k, String(v));
 
   const outcome = await runSimulation(scenarioRequest(scenario)).catch(() => null);
-  const result = outcome?.ok ? outcome.data : null;
+  const result = await localized(outcome?.ok ? outcome.data : null);
 
   return (
     <section className="px-5 py-12 lg:px-10 lg:py-16">
@@ -48,7 +52,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
             <span>{t.scenarios.model(scenario.modelVersion)}</span>
             <span>{t.scenarios.horizon(scenario.horizon)}</span>
             <span>
-              {t.scenarios.savedOn} {new Date(scenario.createdAt).toLocaleDateString("en-GB", { dateStyle: "medium" })}
+              {t.scenarios.savedOn} {new Date(scenario.createdAt).toLocaleDateString(INTL[locale], { dateStyle: "medium" })}
             </span>
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-forest sm:text-5xl">{scenario.title}</h1>
@@ -69,14 +73,14 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
                 <li key={l.code} className="flex justify-between gap-3 rounded-xl bg-sun/15 px-3 py-2 text-sm">
                   <span className="text-ink/80">{l.label}</span>
                   <span className="shrink-0 font-bold tabular-nums text-forest">
-                    {fmtLever(l.base, l.unit)} → {fmtLever(Number(scenario.levers[l.code]), l.unit)}
+                    {fmtLever(l.base, l.unit, locale)} → {fmtLever(Number(scenario.levers[l.code]), l.unit, locale)}
                   </span>
                 </li>
               ))}
               {closureChanged && (
                 <li className="flex justify-between gap-3 rounded-xl bg-sun/15 px-3 py-2 text-sm">
                   <span className="text-ink/80">{t.experiment.closure}</span>
-                  <span className="font-bold text-forest">{fmtLever(String(scenario.levers.closure), null)}</span>
+                  <span className="font-bold text-forest">{fmtLever(String(scenario.levers.closure), null, locale)}</span>
                 </li>
               )}
             </ul>
@@ -105,7 +109,7 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
           <h2 id="results-title" className="font-display text-2xl font-semibold text-forest">{t.scenarios.results(scenario.horizon)}</h2>
           {result ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {CARDS.map((c) => <IndicatorCard key={c} indicator={result.indicators[c]} year={scenario.horizon} loading={false} />)}
+              {CARDS.map((c) => <IndicatorCard key={c} indicator={result.indicators[c]} year={scenario.horizon} loading={false} locale={locale} />)}
             </div>
           ) : (
             <p className="mt-4 rounded-2xl bg-loss/10 p-5 text-sm font-semibold text-loss">{t.lab.error}</p>
@@ -142,8 +146,8 @@ export default async function ScenarioPage({ params }: { params: Promise<{ id: s
               </summary>
               <form action={deleteScenario} className="mt-2 rounded-2xl border border-loss/30 bg-white p-3 text-sm">
                 <input type="hidden" name="id" value={scenario.id} />
-                <p className="text-ink/80">This permanently deletes the scenario{scenario.visibility === "public" ? " and removes it from the Community page" : ""}.</p>
-                <button type="submit" className="mt-2 rounded-full bg-loss px-4 py-1.5 font-bold text-white">Delete permanently</button>
+                <p className="text-ink/80">{t.scenarios.deleteWarning(scenario.visibility === "public")}</p>
+                <button type="submit" className="mt-2 rounded-full bg-loss px-4 py-1.5 font-bold text-white">{t.scenarios.deleteForever}</button>
               </form>
             </details>
           </div>

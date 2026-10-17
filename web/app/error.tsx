@@ -1,11 +1,12 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/i18n";
 
 // Replaces Next's bare "Application error" page. The usual cause is a page left open while a new version
 // of the site was deployed: its forms then call server actions the new version does not have.
 export default function ErrorPage({ error }: { error: Error & { digest?: string } }) {
+  const t = useT();
   const outdated = /Server Action .* was not found/.test(error.message);
   return (
     <section className="px-5 py-20">

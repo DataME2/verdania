@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { moveUnits, type MoveState } from "@/app/market/actions";
-import { t } from "@/lib/messages";
+import { useT } from "../i18n";
 
 type Option = { value: string; label: string };
 
@@ -29,6 +29,7 @@ export function MoveForm({
   label: string;
   idPrefix: string;
 }) {
+  const t = useT();
   const [state, action, pending] = useActionState<MoveState, FormData>(moveUnits, {});
   const select = (name: "from" | "to", options: Option[], text: string) => (
     <label className="block text-xs font-semibold text-ink/70">

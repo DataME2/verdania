@@ -3,23 +3,27 @@ import { ArrowUpRight } from "lucide-react";
 import { DeltaChip } from "@/components/lab/indicator-card";
 import { getBaseline } from "@/lib/data";
 import { fmtDelta, fmtValue } from "@/lib/format";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { presetName } from "@/lib/localize";
 import { runOrNull } from "@/lib/sim";
+import { localized } from "@/lib/sim-localized";
 
 export const SYSTEMS = ["A", "B", "C", "D"] as const;
 export const H = 10;
-const j = t.justice;
 
 /**
  * The four economic systems at year H, each against keeping today's policies, with the range across
  * uncertain assumptions. Engine runs only, cached by input, so /justice and /systems share them.
  */
 export async function SystemsTable({ codes, labelledBy, caption }: { codes: string[]; labelledBy: string; caption: string }) {
-  const [baseline, ...systems] = await Promise.all([
+  const [baseline, t, locale, ...systems] = await Promise.all([
     getBaseline(),
-    ...SYSTEMS.map((preset) => runOrNull({ preset, levers: {}, horizon: H })),
+    getT(),
+    getLocale(),
+    ...SYSTEMS.map((preset) => runOrNull({ preset, levers: {}, horizon: H }).then(localized)),
   ]);
-  const names = Object.fromEntries((baseline?.presets ?? []).map((p) => [p.family, p.name]));
+  const j = t.justice;
+  const names = Object.fromEntries((baseline?.presets ?? []).map((p) => [p.family, presetName(t, p.slug, p.name)]));
   const reference = systems.find(Boolean);
   if (!reference) return <p className="mt-6 text-ink/70">{j.error}</p>;
 
@@ -57,9 +61,9 @@ export async function SystemsTable({ codes, labelledBy, caption }: { codes: stri
                       {ind ? (
                         <>
                           <span className="block font-semibold text-forest">{fmtValue(ind.scenario[H], ind.unit)}</span>
-                          <span className="mt-1 block"><DeltaChip delta={ind.delta[H]} unit={ind.unit} desirable={ind.desirable} /></span>
+                          <span className="mt-1 block"><DeltaChip delta={ind.delta[H]} unit={ind.unit} desirable={ind.desirable} locale={locale} /></span>
                           <span className="mt-1 block text-[11px] text-ink/70">
-                            {j.range}: {fmtDelta(ind.delta_p10[H], ind.unit)} to {fmtDelta(ind.delta_p90[H], ind.unit)}
+                            {j.range}: {t.common.between(fmtDelta(ind.delta_p10[H], ind.unit, locale), fmtDelta(ind.delta_p90[H], ind.unit, locale))}
                           </span>
                         </>
                       ) : (

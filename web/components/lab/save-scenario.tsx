@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Save } from "lucide-react";
 import { saveScenario, type SaveState } from "@/app/scenarios/actions";
 import { GoogleIcon } from "@/components/icons";
-import { t } from "@/lib/messages";
+import { useT } from "../i18n";
 import type { SimRequest } from "@/lib/sim-request";
 
 export function SaveScenario({
@@ -19,6 +19,7 @@ export function SaveScenario({
   signedIn: boolean;
   next: string;
 }) {
+  const t = useT();
   const [state, action, pending] = useActionState<SaveState, FormData>(saveScenario, {});
 
   if (!signedIn) {

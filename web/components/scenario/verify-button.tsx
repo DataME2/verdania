@@ -3,9 +3,10 @@
 import { useActionState } from "react";
 import { BadgeCheck, CircleAlert, RefreshCw } from "lucide-react";
 import { verifyScenario, type VerifyState } from "@/app/scenarios/actions";
-import { t } from "@/lib/messages";
+import { useT } from "../i18n";
 
 export function VerifyButton({ id }: { id: string }) {
+  const t = useT();
   const [state, action, pending] = useActionState<VerifyState, FormData>(verifyScenario, {});
   return (
     <form action={action} className="space-y-3">

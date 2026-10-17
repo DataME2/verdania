@@ -129,6 +129,34 @@ test("Performance: the homepage loads under 200 KB of compressed JavaScript (PRD
   expect(bytes).toBeLessThan(200 * 1024);
 });
 
+test.describe("Spanish", () => {
+  test.use({ locale: "es-CO" });
+
+  test("a Spanish browser gets the site in Spanish, model text included; the switch goes to English and is remembered", async ({ page }) => {
+    const clean = watchConsole(page);
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("¿Puede una economía");
+    await expect(page.locator("#lab").getByText("PIB por persona").first()).toBeVisible(); // engine labels, via /api/simulate
+
+    await page.goto("/experiment?bite=0.6");
+    await expect(page.getByText("Las identidades contables se cumplen")).toBeVisible();
+    await expect(page.getByText(/Un salario mínimo más alto eleva la paga en la base/)).toBeVisible(); // a mechanism, with its values
+    await expect(page.getByText(/eta_mw = -?\d/).first()).toBeVisible();
+    await expect(page.getByLabel("Salario mínimo (proporción del salario mediano)", { exact: true })).toBeVisible(); // a lever from the database
+
+    await page.goto("/systems");
+    await expect(page.getByRole("table", { name: /La economía después de diez años/ }).getByRole("row", { name: /Deuda pública \(bruta\)/ })).not.toContainText("—");
+
+    await page.getByRole("button", { name: "English" }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Same country. Four sets of rules.");
+    await page.goto("/"); // the choice outlives the browser's Spanish preference
+    await expect(page.getByRole("button", { name: "Español" })).toBeVisible();
+    clean();
+  });
+});
+
 test("keyboard: the first Tab reaches the skip link, which moves to the content", async ({ page }) => {
   await page.goto("/methodology");
   await page.keyboard.press("Tab");

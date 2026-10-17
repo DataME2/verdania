@@ -1,6 +1,8 @@
 // Hand-drawn SVG charts: two chart types don't justify a charting library. Each has a text summary
 // and a data table (native <details>) as the non-visual alternative.
 import { fmtValue } from "@/lib/format";
+import { clientMessages as messages } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 import type { Indicator, Series } from "@/lib/sim-types";
 
 const W = 640;
@@ -16,11 +18,12 @@ function scale(values: number[]) {
 }
 
 /** Baseline vs scenario over time, with the scenario's P10–P90 band. Gaps where the model stops. */
-export function LineBandChart({ indicator, years }: { indicator: Indicator; years: number[] }) {
+export function LineBandChart({ indicator, years, locale }: { indicator: Indicator; years: number[]; locale: Locale }) {
+  const c = messages[locale].charts;
   const all = [...indicator.baseline, ...indicator.scenario, ...indicator.p10, ...indicator.p90].filter(
     (v): v is number => v != null && Number.isFinite(v),
   );
-  if (!all.length) return <p className="text-sm text-ink/70">No data for this indicator.</p>;
+  if (!all.length) return <p className="text-sm text-ink/70">{c.noData}</p>;
   const { lo, hi } = scale(all);
   const x = (i: number) => PAD.l + (i / Math.max(1, years.length - 1)) * (W - PAD.l - PAD.r);
   const y = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
@@ -32,7 +35,8 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
     : "";
   const ticks = [0, 1, 2, 3].map((k) => lo + ((hi - lo) * k) / 3);
   const last = years.length - 1;
-  const summary = `${indicator.label}: baseline ${fmtValue(indicator.baseline[last], indicator.unit)} and scenario ${fmtValue(indicator.scenario[last], indicator.unit)} in year ${years[last]}, scenario range ${fmtValue(indicator.p10[last], indicator.unit)} to ${fmtValue(indicator.p90[last], indicator.unit)} across assumptions.`;
+  const f = (s: Series) => fmtValue(s[last], indicator.unit);
+  const summary = c.lineSummary(indicator.label, f(indicator.baseline), f(indicator.scenario), years[last], f(indicator.p10), f(indicator.p90));
 
   return (
     <figure>
@@ -48,7 +52,7 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
         {years.map((yr, i) =>
           i % Math.max(1, Math.ceil(years.length / 6)) === 0 || i === last ? (
             <text key={yr} x={x(i)} y={H - 10} textAnchor="middle" className="fill-ink/60 text-[11px]">
-              {yr === 0 ? "Today" : `Y${yr}`}
+              {yr === 0 ? c.today : c.yearShort(yr)}
             </text>
           ) : null,
         )}
@@ -57,15 +61,16 @@ export function LineBandChart({ indicator, years }: { indicator: Indicator; year
         <path d={line(indicator.scenario)} fill="none" stroke="currentColor" strokeWidth="3" className="text-forest" />
       </svg>
       <figcaption className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink/70">
-        <span className="inline-flex items-center gap-2"><span className="h-0.5 w-6 bg-forest" aria-hidden="true" /> Your scenario</span>
-        <span className="inline-flex items-center gap-2"><span className="h-0 w-6 border-t-2 border-dashed border-ink/45" aria-hidden="true" /> Baseline</span>
-        <span className="inline-flex items-center gap-2"><span className="h-3 w-6 bg-sun/30" aria-hidden="true" /> Range across assumptions (P10–P90)</span>
+        <span className="inline-flex items-center gap-2"><span className="h-0.5 w-6 bg-forest" aria-hidden="true" /> {c.yourScenario}</span>
+        <span className="inline-flex items-center gap-2"><span className="h-0 w-6 border-t-2 border-dashed border-ink/45" aria-hidden="true" /> {c.baseline}</span>
+        <span className="inline-flex items-center gap-2"><span className="h-3 w-6 bg-sun/30" aria-hidden="true" /> {c.band}</span>
       </figcaption>
       <DataTable
+        label={c.showTable}
         caption={indicator.label}
-        head={["Year", "Baseline", "Scenario", "P10", "P90"]}
+        head={[c.yearCol, c.baseline, c.scenario, "P10", "P90"]}
         rows={years.map((yr, i) => [
-          yr === 0 ? "Today" : `Year ${yr}`,
+          yr === 0 ? c.today : c.year(yr),
           ...[indicator.baseline, indicator.scenario, indicator.p10, indicator.p90].map((s) => fmtValue(s[i], indicator.unit)),
         ])}
       />
@@ -78,17 +83,20 @@ export function DecileChart({
   baseline,
   scenario,
   year,
-  names = ["Baseline", "Your scenario"],
-  title = "Disposable income per decile",
+  locale,
+  names = [messages[locale].charts.baseline, messages[locale].charts.yourScenario],
+  title = messages[locale].charts.decileTitle,
 }: {
   baseline: Series;
   scenario: Series;
   year: number;
+  locale: Locale;
   names?: [string, string];
   title?: string;
 }) {
+  const c = messages[locale].charts;
   const vals = [...baseline, ...scenario].filter((v): v is number => v != null);
-  if (!vals.length) return <p className="text-sm text-ink/70">Not available: the model stopped before this year.</p>;
+  if (!vals.length) return <p className="text-sm text-ink/70">{c.stopped}</p>;
   const hi = Math.max(...vals) * 1.08;
   const slot = (W - PAD.l - PAD.r) / 10;
   const y = (v: number) => PAD.t + (1 - v / hi) * (H - PAD.t - PAD.b);
@@ -102,7 +110,7 @@ export function DecileChart({
   return (
     <figure>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img"
-        aria-label={`${title}, year ${year}. ${names[1]} vs ${names[0]}: poorest tenth ${pct(0)}%, richest tenth ${pct(9)}%.`}>
+        aria-label={c.decileSummary(title, year, names[0], names[1], pct(0), pct(9))}>
         {ticks.map((t) => (
           <g key={t}>
             <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="currentColor" className="text-forest/10" />
@@ -125,21 +133,22 @@ export function DecileChart({
       <figcaption className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink/70">
         <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-forest" aria-hidden="true" /> {names[1]}</span>
         <span className="inline-flex items-center gap-2"><span className="h-3 w-3 bg-ink/25" aria-hidden="true" /> {names[0]}</span>
-        <span>D1 = poorest tenth of people, D10 = richest. Year {year}.</span>
+        <span>{c.decileKey(year)}</span>
       </figcaption>
       <DataTable
-        caption={`${title}, year ${year}`}
-        head={["Decile", ...names, "Change"]}
+        label={c.showTable}
+        caption={c.withYear(title, year)}
+        head={[c.decile, ...names, c.change]}
         rows={baseline.map((b, i) => [`D${i + 1}`, fmtValue(b, "V$"), fmtValue(scenario[i], "V$"), `${pct(i)}%`])}
       />
     </figure>
   );
 }
 
-function DataTable({ caption, head, rows }: { caption: string; head: string[]; rows: string[][] }) {
+function DataTable({ label, caption, head, rows }: { label: string; caption: string; head: string[]; rows: string[][] }) {
   return (
     <details className="mt-3 text-sm">
-      <summary className="cursor-pointer font-semibold text-forest">Show data table</summary>
+      <summary className="cursor-pointer font-semibold text-forest">{label}</summary>
       <div className="relative mt-2 overflow-x-auto">
         <table className="w-full text-left tabular-nums">
           <caption className="sr-only">{caption}</caption>

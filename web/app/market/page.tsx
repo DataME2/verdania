@@ -10,18 +10,21 @@ import { getPortfolio, type Portfolio } from "@/lib/account-data";
 import { getViewer } from "@/lib/auth";
 import { getProjects, getPublicTotals, type Project, type ProjectTotal } from "@/lib/data";
 import { fmtValue } from "@/lib/format";
-import { CATEGORY, t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
+import { localizeProjects } from "@/lib/localize";
+import type { Messages } from "@/lib/messages";
 import { projectPortfolio } from "@/lib/portfolio-math";
 
-export const metadata: Metadata = {
-  title: "Virtual Investment Market",
-  description: "Allocate 100,000 virtual units to Verdania's projects. Virtual capital only: no real money or investments.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.nav.find((n) => n.href === "/market")?.label, description: t.market.description };
+}
 
 const money = (v: number) => fmtValue(v, "V$");
 
 export default async function MarketPage() {
-  const [projects, totals, viewer] = await Promise.all([getProjects(), getPublicTotals(), getViewer()]);
+  const [stored, totals, viewer, t] = await Promise.all([getProjects(), getPublicTotals(), getViewer(), getT()]);
+  const projects = localizeProjects(stored, t);
   const portfolio = viewer ? await getPortfolio() : null;
   const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
   const totalOf = Object.fromEntries(totals.map((x) => [x.projectId, x]));
@@ -55,7 +58,7 @@ export default async function MarketPage() {
               </form>
             </Callout>
           ) : (
-            <PortfolioPanel portfolio={portfolio} projects={projects} byId={byId} />
+            <PortfolioPanel portfolio={portfolio} projects={projects} byId={byId} t={t} />
           )}
         </div>
 
@@ -72,7 +75,7 @@ export default async function MarketPage() {
                     requestId={randomUUID()}
                     to={p.id}
                     max={portfolio.unallocated}
-                    label={held[p.id] ? `${t.market.allocate} more` : t.market.allocate}
+                    label={held[p.id] ? t.market.allocateMore : t.market.allocate}
                     idPrefix={`alloc-${p.id}`}
                   />
                 ) : undefined
@@ -81,7 +84,7 @@ export default async function MarketPage() {
           ))}
         </div>
 
-        <Dashboard totals={totals} byId={byId} />
+        <Dashboard totals={totals} byId={byId} t={t} />
       </div>
     </section>
   );
@@ -99,14 +102,14 @@ function Callout({ title, lead, children }: { title: string; lead: string; child
   );
 }
 
-function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; projects: Project[]; byId: Record<string, Project> }) {
+function PortfolioPanel({ portfolio, projects, byId, t }: { portfolio: Portfolio; projects: Project[]; byId: Record<string, Project>; t: Messages }) {
   const allocated = portfolio.allocations.reduce((s, a) => s + a.units, 0);
   const terms = Object.fromEntries(
     projects.map((p) => [p.id, { low: p.returnLow, central: p.returnCentral, high: p.returnHigh, years: p.years, jobsPerMillion: p.jobsPerMillion }]),
   );
   const proj = projectPortfolio(portfolio.allocations, terms);
   const options = projects.map((p) => ({ value: p.id, label: p.title }));
-  const heldOptions = portfolio.allocations.map((a) => ({ value: a.projectId, label: `${byId[a.projectId]?.title ?? "Project"} (${money(a.units)})` }));
+  const heldOptions = portfolio.allocations.map((a) => ({ value: a.projectId, label: `${byId[a.projectId]?.title ?? t.market.project} (${money(a.units)})` }));
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -133,7 +136,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
             {portfolio.allocations.map((a) => (
               <li key={a.projectId} className="grid gap-2 py-3 sm:grid-cols-[1fr_minmax(200px,260px)] sm:items-start">
                 <div>
-                  <p className="text-sm font-semibold text-ink">{byId[a.projectId]?.title ?? "Project"}</p>
+                  <p className="text-sm font-semibold text-ink">{byId[a.projectId]?.title ?? t.market.project}</p>
                   <p className="text-xs tabular-nums text-ink/70">{money(a.units)}</p>
                 </div>
                 <MoveForm requestId={randomUUID()} from={a.projectId} max={a.units} label={t.market.withdraw} idPrefix={`wd-${a.projectId}`} />
@@ -168,7 +171,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
             {portfolio.ledger.map((e) => (
               <li key={e.id} className="flex justify-between gap-3">
                 <span className="text-ink/80">
-                  {t.market.entry[e.type]} {e.projectId ? byId[e.projectId]?.title ?? "a project" : "the market"}
+                  {t.market.entry[e.type]} {e.projectId ? byId[e.projectId]?.title ?? t.market.aProject : t.market.theMarket}
                 </span>
                 <span className="shrink-0 tabular-nums text-ink/70">{money(e.units)}</span>
               </li>
@@ -180,7 +183,7 @@ function PortfolioPanel({ portfolio, projects, byId }: { portfolio: Portfolio; p
   );
 }
 
-function Dashboard({ totals, byId }: { totals: ProjectTotal[]; byId: Record<string, Project> }) {
+function Dashboard({ totals, byId, t }: { totals: ProjectTotal[]; byId: Record<string, Project>; t: Messages }) {
   const sorted = [...totals].sort((a, b) => b.units - a.units);
   const max = sorted[0]?.units ?? 0;
   return (
@@ -195,9 +198,9 @@ function Dashboard({ totals, byId }: { totals: ProjectTotal[]; byId: Record<stri
             <li key={x.projectId}>
               <div className="flex justify-between gap-3 text-sm">
                 <span className="font-semibold text-ink">
-                  {byId[x.projectId]?.title} <span className="font-normal text-ink/70">· {CATEGORY[x.category] ?? x.category}</span>
+                  {byId[x.projectId]?.title} <span className="font-normal text-ink/70">· {t.categories[x.category] ?? x.category}</span>
                 </span>
-                <span className="shrink-0 tabular-nums text-ink/70">{money(x.units)} · {x.participants} people</span>
+                <span className="shrink-0 tabular-nums text-ink/70">{money(x.units)} · {t.market.people(x.participants)}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-white">
                 <div className="h-2 rounded-full bg-forest" style={{ width: `${(x.units / max) * 100}%` }} />

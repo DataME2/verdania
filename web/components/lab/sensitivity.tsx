@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { fmtDelta, fmtParam } from "@/lib/format";
-import { t } from "@/lib/messages";
 import type { SimRequest } from "@/lib/sim-request";
 import type { Sensitivity } from "@/lib/sim-types";
+import { useLocale, useT } from "../i18n";
 import { useEngine } from "./use-simulation";
 
-const c = t.sensitivity;
 const TOP = 8;
 
 /** "Which assumptions drive this result?": a tornado of one-at-a-time effects, fetched only while open. */
 export function SensitivityPanel({ request }: { request: SimRequest }) {
+  const t = useT();
+  const locale = useLocale();
+  const c = t.sensitivity;
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState("poverty_anchored");
   const sens = useEngine<Sensitivity>("/api/sensitivity", request, 500, open);
@@ -46,7 +48,7 @@ export function SensitivityPanel({ request }: { request: SimRequest }) {
         </div>
       )}
       <div className="mt-5" aria-live="polite">
-        {sens.status === "error" && <p className="text-sm font-semibold text-loss">{sens.error}</p>}
+        {sens.status === "error" && <p className="text-sm font-semibold text-loss">{sens.error || t.lab.error}</p>}
         {sens.status === "loading" && open && <p className="text-sm text-ink/70">{t.lab.recalculating}</p>}
         {data && !moved && <p className="text-sm text-ink/70">{c.none}</p>}
         {data && moved && (
@@ -57,9 +59,9 @@ export function SensitivityPanel({ request }: { request: SimRequest }) {
                 <li key={r.parameter} className="grid gap-1 text-sm sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:items-center sm:gap-4">
                   <div>
                     <span className="font-semibold text-ink/80">{r.label}</span>{" "}
-                    <span className="whitespace-nowrap text-[11px] font-bold text-leaf">{t.methodology.evidence[r.evidence].label}</span>
+                    <span className="whitespace-nowrap text-[11px] font-bold text-leaf">{t.evidence[r.evidence].label}</span>
                     <span className="block text-[11px] text-ink/70">
-                      {c.low} {fmtParam(r.low)}: {fmtDelta(r.effect[target]?.low, unit)} · {c.high} {fmtParam(r.high)}: {fmtDelta(r.effect[target]?.high, unit)}
+                      {c.low} {fmtParam(r.low)}: {fmtDelta(r.effect[target]?.low, unit, locale)} · {c.high} {fmtParam(r.high)}: {fmtDelta(r.effect[target]?.high, unit, locale)}
                     </span>
                   </div>
                   <div className="relative h-5 rounded bg-forest/5" aria-hidden="true">

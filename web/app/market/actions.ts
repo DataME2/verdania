@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getT } from "@/lib/i18n-server";
 import { createClient } from "@/lib/supabase/server";
 
 export type MoveState = { ok?: string; error?: string };
@@ -8,13 +9,13 @@ export type MoveState = { ok?: string; error?: string };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Messages raised by the database functions (supabase/migrations/20261016000000_core_schema.sql).
-const FRIENDLY: [RegExp, string][] = [
-  [/not enough unallocated/, "You don't have that many unallocated virtual units."],
-  [/not enough virtual units in the source/, "That project doesn't hold that many of your units."],
-  [/join the virtual market first/, "Join the virtual market first."],
-  [/sign-in required/, "Sign in to use the virtual market."],
-  [/unknown project/, "That project isn't available."],
-];
+const FRIENDLY = [
+  [/not enough unallocated/, "unallocated"],
+  [/not enough virtual units in the source/, "source"],
+  [/join the virtual market first/, "join"],
+  [/sign-in required/, "signIn"],
+  [/unknown project/, "unknown"],
+] as const;
 
 async function signedInClient() {
   const supabase = await createClient();
@@ -35,23 +36,25 @@ export async function joinMarket(): Promise<void> {
  * checks balances under a row lock; `requestId` makes a repeated submission (double click, retry) a no-op.
  */
 export async function moveUnits(_prev: MoveState, form: FormData): Promise<MoveState> {
-  const supabase = await signedInClient();
-  if (!supabase) return { error: "Sign in to use the virtual market." };
+  const [supabase, t] = await Promise.all([signedInClient(), getT()]);
+  const e = t.market.errors;
+  if (!supabase) return { error: e.signIn };
 
   const from = String(form.get("from") ?? "") || null;
   const to = String(form.get("to") ?? "") || null;
   const requestId = String(form.get("requestId") ?? "");
   const units = Number(form.get("units"));
-  if (!Number.isInteger(units) || units < 1 || units > 1_000_000) return { error: "Enter a whole number of units." };
+  if (!Number.isInteger(units) || units < 1 || units > 1_000_000) return { error: e.whole };
   if ((from && !UUID.test(from)) || (to && !UUID.test(to)) || !UUID.test(requestId) || (!from && !to) || from === to) {
-    return { error: "Choose a project." };
+    return { error: e.choose };
   }
 
   const { error } = await supabase.rpc("move_virtual_units", { p_from: from, p_to: to, p_units: units, p_request_id: requestId });
   if (error) {
-    return { error: FRIENDLY.find(([re]) => re.test(error.message))?.[1] ?? "That didn't work. Nothing was changed." };
+    const known = FRIENDLY.find(([re]) => re.test(error.message))?.[1];
+    return { error: known ? e[known] : e.failed };
   }
   revalidatePath("/market");
   revalidatePath("/account");
-  return { ok: `${units.toLocaleString("en")} virtual units moved.` };
+  return { ok: t.market.moved(units.toLocaleString("en")) };
 }

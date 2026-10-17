@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Globe, Lock } from "lucide-react";
 import type { ScenarioSummary } from "@/lib/data";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { INTL } from "@/lib/locale";
 
-export function ScenarioList({ scenarios, empty, showVisibility = false }: { scenarios: ScenarioSummary[]; empty: string; showVisibility?: boolean }) {
+export async function ScenarioList({ scenarios, empty, showVisibility = false }: { scenarios: ScenarioSummary[]; empty: string; showVisibility?: boolean }) {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   if (scenarios.length === 0) return <p className="text-sm text-ink/70">{empty}</p>;
   return (
     <ul className="divide-y divide-forest/10">
@@ -18,7 +20,7 @@ export function ScenarioList({ scenarios, empty, showVisibility = false }: { sce
               </span>
             )}
             <span>{t.scenarios.horizon(s.horizon)}</span>
-            <span>{new Date(s.publishedAt ?? s.createdAt).toLocaleDateString("en-GB", { dateStyle: "medium" })}</span>
+            <span>{new Date(s.publishedAt ?? s.createdAt).toLocaleDateString(INTL[locale], { dateStyle: "medium" })}</span>
           </p>
           {s.description && <p className="mt-1 line-clamp-2 text-sm text-ink/70">{s.description}</p>}
         </li>

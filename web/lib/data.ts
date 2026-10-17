@@ -123,6 +123,7 @@ export async function getAllocatedTotal(): Promise<number> {
 
 export type Project = {
   id: string;
+  slug: string;
   title: string;
   summary: string;
   category: string;
@@ -146,11 +147,12 @@ export const getProjects = unstable_cache(
     const { data } = await createPublicClient()
       .from("investment_projects")
       .select(
-        "id, title, summary, category, funding_target, public_contribution, private_return_low, private_return_central, private_return_high, jobs_per_million, social_return_note, environmental_note, risk_level, horizon_years, assumptions, administrative_regions(name)",
+        "id, slug, title, summary, category, funding_target, public_contribution, private_return_low, private_return_central, private_return_high, jobs_per_million, social_return_note, environmental_note, risk_level, horizon_years, assumptions, administrative_regions(name)",
       )
       .order("category");
     return (data ?? []).map((p) => ({
       id: p.id,
+      slug: p.slug,
       title: p.title,
       summary: p.summary,
       category: p.category,
@@ -168,7 +170,7 @@ export const getProjects = unstable_cache(
       assumptions: (p.assumptions as string[]) ?? [],
     }));
   },
-  ["projects"],
+  ["projects-v2"],
   { revalidate: 3600 },
 );
 

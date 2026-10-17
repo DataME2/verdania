@@ -5,10 +5,8 @@ import { useState } from "react";
 import { Anchor, ArrowRight, Building2, Factory, Mountain, Waves, Wheat, type LucideIcon } from "lucide-react";
 import type { Region } from "@/lib/data";
 import { fmtValue } from "@/lib/format";
-import { SECTOR, t } from "@/lib/messages";
 import { LAYERS, type Layer } from "@/lib/regions";
-
-const d = t.discover;
+import { useT } from "../i18n";
 
 // Each region's share of the drawing matches its share of the land area within about 12%.
 const SHAPES: Record<string, { path: string; label: [number, number]; icon: LucideIcon }> = {
@@ -24,6 +22,8 @@ const SHAPES: Record<string, { path: string; label: [number, number]; icon: Luci
 const PALETTE = ["#e4edd9", "#a8d5ba", "#8ec97e", "#6db345", "#4a7c3a", "#2d5016"];
 
 export function RegionExplorer({ regions, national }: { regions: Region[]; national: Record<string, number | null> }) {
+  const t = useT();
+  const d = t.discover;
   const [layer, setLayer] = useState<Layer>("mean_income");
   const [selected, setSelected] = useState(regions[0].code);
   const region = regions.find((r) => r.code === selected)!;
@@ -161,7 +161,7 @@ export function RegionExplorer({ regions, national }: { regions: Region[]; natio
           {sectors.map(([code, share]) => (
             <li key={code}>
               <div className="flex justify-between text-xs">
-                <span className="text-white/80">{SECTOR[code] ?? code}</span>
+                <span className="text-white/80">{t.sectors[code] ?? code}</span>
                 <strong className="tabular-nums">{fmtValue(share, "share")}</strong>
               </div>
               <div className="mt-1 h-2 rounded-full bg-white/10" aria-hidden="true">

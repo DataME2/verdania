@@ -3,13 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { moderateScenario, setSuggestionStatus } from "@/app/admin/actions";
 import { getStaff, getViewer } from "@/lib/auth";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { INTL } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Moderation", robots: { index: false } };
-
-const a = t.admin;
-const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC";
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).admin.title, robots: { index: false } };
+}
 
 type Suggestion = { id: string; topic: string; message: string; name: string | null; email: string | null; user_id: string | null; status: string; created_at: string };
 type Published = { id: string; title: string; description: string | null; published_at: string | null; moderation_status: string };
@@ -18,8 +18,10 @@ type Audit = { id: number; action: string; entity: string; entity_id: string | n
 export default async function AdminPage() {
   // Middleware only redirects anonymous visitors; the role check is here and, for every action, in the database.
   if (!(await getViewer())) redirect("/sign-in?next=/admin");
-  const staff = await getStaff();
+  const [staff, t, locale] = await Promise.all([getStaff(), getT(), getLocale()]);
   if (!staff.moderator) notFound();
+  const a = t.admin;
+  const when = (iso: string) => new Date(iso).toLocaleString(INTL[locale], { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC";
 
   const supabase = await createClient();
   const [suggestions, published, audit] = await Promise.all([

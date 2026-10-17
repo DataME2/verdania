@@ -3,22 +3,24 @@ import { Suspense } from "react";
 import { Lab, type PresetOption } from "@/components/lab/lab";
 import { getViewer } from "@/lib/auth";
 import { getBaseline, getLevers, getMethodology, getRegions } from "@/lib/data";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
+import { localizeParams, presetName } from "@/lib/localize";
 
-export const metadata: Metadata = {
-  title: "Run an experiment",
-  description: "Change Verdania's policies and see the simulated consequences, with uncertainty ranges and assumptions.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.experiment.title, description: t.experiment.description };
+}
 
 export default async function ExperimentPage() {
-  const [baseline, viewer, regionList] = await Promise.all([getBaseline(), getViewer(), getRegions()]);
+  const [baseline, viewer, regionList, t] = await Promise.all([getBaseline(), getViewer(), getRegions(), getT()]);
   const regions = Object.fromEntries(regionList.map((r) => [r.code, r.name]));
-  const [levers, methodology] = baseline
+  const [storedLevers, methodology] = baseline
     ? await Promise.all([getLevers(baseline.modelVersion), getMethodology(baseline.modelVersion)])
     : [[], null];
-  const assumptions = methodology?.parameters.filter((p) => p.kind === "structural") ?? [];
+  const levers = localizeParams(storedLevers, t);
+  const assumptions = localizeParams(methodology?.parameters.filter((p) => p.kind === "structural") ?? [], t);
   const presets: PresetOption[] = (baseline?.presets ?? [])
-    .map((p) => ({ id: (p.family ?? "baseline") as PresetOption["id"], name: p.name, levers: p.levers }))
+    .map((p) => ({ id: (p.family ?? "baseline") as PresetOption["id"], name: presetName(t, p.slug, p.name), levers: p.levers }))
     .sort((a, b) => (a.id === "baseline" ? -1 : b.id === "baseline" ? 1 : a.id.localeCompare(b.id)));
 
   return (

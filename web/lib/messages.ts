@@ -1,48 +1,72 @@
-// UI copy, English. Another language = another object with the same shape.
-export const CATEGORY: Record<string, string> = {
-  agriculture: "Agriculture",
-  food_processing: "Food processing",
-  renewable_energy: "Renewable energy",
-  infrastructure: "Infrastructure",
-  technology: "Technology and innovation",
-  housing: "Housing",
-  healthcare: "Healthcare",
-  education: "Education and training",
-  cooperatives: "Worker cooperatives",
-  sme: "Small and medium businesses",
-  ppp: "Public-private partnership",
-  community: "Community development",
-  public_fund: "Public investment fund",
+// UI copy, English. Spanish is in messages.es.ts, with the same shape (the Messages type checks it). The part
+// client components need is in messages.client.ts.
+import { enClient, type Widen } from "./messages.client";
+
+/**
+ * Text that reaches the site in English from the engine or the database, keyed by code. English leaves
+ * every map empty, so the source text shows; another language fills them in. Anything missing falls back
+ * to the source text, so a new indicator or project never shows a blank.
+ */
+export type ModelText = {
+  indicators: Record<string, string>;
+  /** Mechanism explanations by lever code, with {parameter} placeholders filled from the run's values. */
+  mechanisms: Record<string, string>;
+  /** The engine's fixed assumptions, in the engine's order; null keeps the engine's text. */
+  assumptions: readonly string[] | null;
+  /** The fiscal-closure line the engine adds to its assumptions, by closure code. */
+  closure: Record<string, string>;
+  /** Not-modelled items, keyed by the engine's English phrase. */
+  notModelled: Record<string, string>;
+  /** A sustainability flag: the indicator's label and its limit. */
+  exceeds: ((label: string, limit: string) => string) | null;
+  params: Record<string, string>;
+  presets: Record<string, string>;
+  regions: Record<string, string>;
+  versions: Record<string, string>;
+  projects: Record<string, { title: string; summary: string; social: string; environmental: string }>;
+  /** Project assumptions, keyed by their English text. */
+  projectAssumptions: Record<string, string>;
 };
 
-export const SECTOR: Record<string, string> = {
-  agriculture: "Agriculture",
-  food_processing: "Food processing",
-  industry_energy: "Industry and energy",
-  construction: "Construction",
-  private_services: "Private services",
-  public_services: "Public services",
+const sourceText: ModelText = {
+  indicators: {},
+  mechanisms: {},
+  assumptions: null,
+  closure: {},
+  notModelled: {},
+  exceeds: null,
+  params: {},
+  presets: {},
+  regions: {},
+  versions: {},
+  projects: {},
+  projectAssumptions: {},
 };
 
-export const t = {
+export const en = {
+  ...enClient,
+  categories: {
+    agriculture: "Agriculture",
+    food_processing: "Food processing",
+    renewable_energy: "Renewable energy",
+    infrastructure: "Infrastructure",
+    technology: "Technology and innovation",
+    housing: "Housing",
+    healthcare: "Healthcare",
+    education: "Education and training",
+    cooperatives: "Worker cooperatives",
+    sme: "Small and medium businesses",
+    ppp: "Public-private partnership",
+    community: "Community development",
+    public_fund: "Public investment fund",
+  } as Record<string, string>,
+  model: sourceText,
   brand: { name: "VERDANIA", tagline: "An open economic laboratory", home: "Verdania home" },
-  nav: [
-    { href: "/discover", label: "Discover Verdania" },
-    { href: "/people", label: "People and Society" },
-    { href: "/systems", label: "Economic Systems" },
-    { href: "/market", label: "Virtual Investment Market" },
-    { href: "/justice", label: "Social Justice" },
-    { href: "/experiment", label: "Run an Experiment", primary: true },
-    { href: "/methodology", label: "Research and Methodology" },
-    { href: "/community", label: "Community" },
-  ],
-  cta: {
-    experiment: "Run an Experiment",
-    google: "Continue with Google",
-    explore: "Explore without an account",
-    menu: "Open navigation",
-    closeMenu: "Close navigation",
-    account: "Your account",
+  common: { loading: "Loading…", between: (lo: string, hi: string) => `${lo} to ${hi}` },
+  meta: {
+    title: "Verdania: Can an economy serve humanity?",
+    description:
+      "An interactive economic laboratory: experiment with economic models, public policies and virtual investment in Verdania, a fictional country of 2,000,000 synthetic people.",
   },
   badges: { synthetic: "Synthetic data", virtual: "Virtual capital only", model: "Model output, not a forecast" },
   hero: {
@@ -50,6 +74,9 @@ export const t = {
     title: ["Can an economy", "serve humanity?"],
     lead: "Can an economy keep the benefits of markets and private investment while making prosperity serve everyone?",
     art: "Illustration of Verdania's farms, river, city and wind turbines",
+    badgesLabel: "About the data",
+    economyLabel: "Economy",
+    economy: "Agriculture-led",
     flowLabel: "Capital flow",
     flow: "Fields → Factories → Families",
     ticker: "A fictional country · Synthetic population · Transparent assumptions · No real money · No financial advice",
@@ -68,100 +95,12 @@ export const t = {
     environment: "Environmental effects come from each investment project's notes today; the simulation will model them in a later version.",
   },
   stats: {
+    label: "Verdania at a glance",
     population: "Population · 50% women / 50% men",
     employment: "Employment rate (ages 15–64)",
     gdp: "GDP per person",
     allocated: "Virtual capital allocated so far",
     source: (version: string) => `Synthetic baseline · model v${version}`,
-  },
-  lab: {
-    eyebrow: "01 · Live mini-experiment",
-    title: "Move a lever. See it recalculate.",
-    lead: "Three of Verdania's policy settings. Every number below is calculated by the simulation engine for year 10 and compared with Verdania's baseline.",
-    open: "Open the full lab",
-    reset: "Reset to today",
-    why: "Why did this change?",
-    noChange: "Move a lever to see what changes and why.",
-    recalculating: "Recalculating…",
-    footnote: (version: string, draws: number) =>
-      `Model v${version} · year 10 vs baseline · ranges from ${draws} draws of uncertain assumptions · not a forecast`,
-    error: "The simulation engine isn't reachable right now. Nothing is shown rather than a guess.",
-  },
-  experiment: {
-    eyebrow: "Economic lab",
-    title: "Run an experiment",
-    challengeLabel: (n: number) => `Challenge ${n}`,
-    challengePick: "Choose a challenge",
-    // Each challenge is an open question: its suggested experiments are starting points, never an answer.
-    challenges: [
-      {
-        slug: "growth-and-poverty",
-        question: "Does higher economic growth necessarily reduce poverty?",
-        lead: "Push growth and compare GDP per person with two poverty measures. Anchored poverty uses a fixed line (60% of today's median); relative poverty moves with the median. Do they tell the same story?",
-        tries: [
-          { label: "Growth push", levers: { ig: 0.06, e: 0.06, tau_c: 0.18 } },
-          { label: "Growth push + minimum income", levers: { ig: 0.06, e: 0.06, tau_c: 0.18, gmi: 0.35 } },
-        ],
-        cards: ["gdp_pc", "median_income", "poverty_anchored", "poverty_relative", "gini_disposable", "unemployment", "labour_share", "debt_share"],
-      },
-      {
-        slug: "who-pays",
-        question: "Who pays for better public services?",
-        lead: "Raise public health and education spending, then choose how to pay for it: a higher top income-tax rate, a higher VAT rate, or borrowing. Compare who gains by tenth of the population, and what happens to the deficit and debt.",
-        tries: [
-          { label: "Services + top income tax", levers: { m: 0.065, e: 0.055, tau_top: 0.5 } },
-          { label: "Services + VAT", levers: { m: 0.065, e: 0.055, tau_v: 0.18 } },
-          { label: "Services, borrowed", levers: { m: 0.065, e: 0.055 } },
-        ],
-        cards: ["median_income", "poverty_relative", "gini_disposable", "health_access", "human_capital", "gdp_pc", "deficit_share", "debt_share"],
-      },
-      {
-        slug: "ownership",
-        question: "Does who owns capital change who gains?",
-        lead: "Move part of the economy's capital into worker-cooperative or public ownership, and compare wealth concentration, incomes and growth. Former owners are compensated at book value with public bonds, so gross public debt rises.",
-        tries: [
-          { label: "Worker cooperatives (25%)", levers: { s_coop: 0.25 } },
-          { label: "Public ownership (35%)", levers: { s_pub: 0.35 } },
-        ],
-        cards: ["wealth_top10", "wealth_top1", "gini_disposable", "median_income", "poverty_relative", "gdp_pc", "private_investment", "debt_share"],
-      },
-    ],
-    systems: "Starting rules",
-    today: "Verdania today",
-    horizon: "Horizon",
-    years: (n: number) => `${n} ${n === 1 ? "year" : "years"}`,
-    levers: "Policy levers",
-    groups: {
-      taxes: "Taxes",
-      work: "Work and wages",
-      services: "Public services and transfers",
-      ownership: "Ownership",
-      fiscal: "Fiscal rule",
-    },
-    closure: "When the budget is in deficit",
-    closureOptions: { borrow: "Borrow", adjust_other: "Cut other public spending" },
-    changed: (n: number) => (n === 0 ? "No levers changed" : `${n} ${n === 1 ? "lever" : "levers"} changed`),
-    resetAll: "Reset all levers",
-    adjust: "Adjust the levers",
-    done: "Done",
-    results: "Results",
-    at: (year: number) => `Year ${year} vs baseline`,
-    chart: "Over time",
-    whoGains: "Who gains?",
-    whoGainsLead: "Disposable income per person (after taxes and transfers), by tenth of the population.",
-    where: "Where it lands",
-    whereLead: (year: number) =>
-      `Each region in year ${year}: your scenario, and the change from the baseline. Every policy applies nationally; regions differ in their jobs, incomes and people.`,
-    whereCaption: (year: number) => `Regional results in year ${year}, with the change from the baseline`,
-    region: "Region",
-    why: "Why it changed",
-    assumptions: "Assumptions and limits",
-    notModelled: "Not modelled yet:",
-    methodology: "See the methodology",
-    unsustainable: "Fiscal warning:",
-    breakdown: (year: number) =>
-      `This path leaves the model's valid range after year ${year} (debt or interest too high). Later years are not shown.`,
-    accounting: "Accounting identities hold",
   },
   admin: {
     title: "Moderation",
@@ -183,27 +122,6 @@ export const t = {
     auditCols: { when: "When", action: "Action", entity: "Item", details: "Details" },
     hiddenNote: "A moderator has hidden this scenario from the Community page. It stays visible to you.",
   },
-  sensitivity: {
-    title: "Which assumptions drive this result?",
-    lead: "Each assumption in turn is set to the low and then the high end of its published range, with all the others at their central values. The bars show how much that changes your policy's effect, largest first.",
-    pick: "Effect on",
-    chartTitle: (label: string, year: number) => `Change in your policy's effect on ${label}, year ${year}`,
-    low: "Low end",
-    high: "High end",
-    none: "Change a policy first: with no policy change there is no effect for an assumption to move.",
-    note: "Change any of these under “Challenge this result”.",
-  },
-  challenge: {
-    title: "Challenge this result",
-    lead: "Every result rests on assumptions about how people and firms respond, and economists disagree about many of them. Change any assumption within its published range. Both the baseline and your scenario use your value, and it stays fixed in every uncertainty draw.",
-    changed: (n: number) => (n === 0 ? "No assumptions changed" : `${n} ${n === 1 ? "assumption" : "assumptions"} changed`),
-    reset: "Reset all assumptions",
-    chips: "Assumptions you changed",
-    chip: (label: string, value: string, central: string) => `${label}: ${value} (central ${central})`,
-    remove: (label: string) => `Reset ${label} to its central value`,
-    fixed: "The ranges no longer include uncertainty about these assumptions: each is held at your value.",
-    scenario: "Assumptions changed from their central values",
-  },
   systems: {
     eyebrow: "02 · Four economic systems",
     title: "Same country. Four sets of rules.",
@@ -223,6 +141,7 @@ export const t = {
       `An open fictional economy for testing ideas, not predicting the future. Model v${version} · All data synthetic. No real money, securities or investments.`,
   },
   signIn: {
+    meta: "Sign in",
     title: "Continue with Google",
     lead: "You only need an account to save scenarios and join the Virtual Investment Market.",
     storeTitle: "What we store",
@@ -237,13 +156,6 @@ export const t = {
     privacyLink: "Read the privacy notice",
     noAccount: "Explore without an account",
   },
-  error: {
-    title: "Something went wrong",
-    lead: "This page hit an unexpected error. Reloading usually fixes it.",
-    outdatedTitle: "Verdania was updated while this page was open",
-    outdated: "This page belongs to the previous version, so what you just did was not completed. Reload the page and try again.",
-    reload: "Reload the page",
-  },
   privacy: {
     title: "Privacy",
     footer: "Privacy",
@@ -256,6 +168,7 @@ export const t = {
         title: "Browsing without an account",
         items: [
           "No account, no profile and no tracking. The site sets no analytics or advertising cookies.",
+          "If you switch language, a cookie remembers your choice for a year.",
           "To stop abuse, the website counts each IP address's requests for a few minutes, in memory. The counts are never stored.",
         ],
       },
@@ -265,7 +178,7 @@ export const t = {
         items: [
           "Supabase, which runs our sign-in, keeps what Google shares: your name, email address and picture link, and when you last signed in. Your email is never shown on the site.",
           "Your profile holds only a display name and picture link, and it is private.",
-          "The site uses two cookies: one keeps you signed in, and the other remembers for up to ten minutes which page to return you to after you sign in.",
+          "Signing in adds two cookies: one keeps you signed in, and the other remembers for up to ten minutes which page to return you to after you sign in.",
           "Signing in grants no special permissions. Moderator and researcher roles are given separately.",
         ],
       },
@@ -312,6 +225,7 @@ export const t = {
     contactLink: "Send a message",
   },
   authError: {
+    meta: "Sign-in problem",
     title: "Sign-in didn't complete",
     cancelled: "Google sign-in was cancelled or interrupted.",
     exchange: "The sign-in link expired or was already used.",
@@ -320,12 +234,15 @@ export const t = {
   },
   account: {
     title: "Your account",
+    name: "Name",
     since: "Member since",
     visibility: "Profile visibility",
     private: "Private",
     public: "Public",
     signOut: "Sign out",
     portfolio: "Virtual portfolio",
+    holdings: (allocated: string, projects: number, unallocated: string) =>
+      `${allocated} allocated across ${projects} ${projects === 1 ? "project" : "projects"} · ${unallocated} unallocated`,
     notJoined: "You haven't joined the virtual market yet.",
     goMarket: "Go to the market",
     deleteTitle: "Delete your account",
@@ -336,90 +253,6 @@ export const t = {
     deleteWord: "delete",
     deleteButton: "Delete my account permanently",
     deleteError: "Your account couldn't be deleted right now. Nothing was removed. Please try again later.",
-  },
-  market: {
-    eyebrow: "Virtual investment market",
-    title: "Put 100,000 virtual units to work",
-    lead: "Choose which of Verdania's projects to back with virtual capital. Each project shows its private financial return separately from its social and environmental effects.",
-    badges: ["Virtual capital only: no real money", "Not an investment offer", "Project figures are assumptions, not model results"],
-    signIn: "Sign in to receive your virtual units",
-    signInLead: "Anyone can browse the projects. To allocate virtual units you need an account (Google sign-in).",
-    joinTitle: "Join the virtual market",
-    joinLead: "Your account receives 100,000 virtual units, once. They can't be bought, sold, transferred or redeemed for anything.",
-    join: "Join and receive 100,000 virtual units",
-    portfolio: "Your virtual portfolio",
-    unallocated: "Unallocated",
-    allocated: "Allocated",
-    total: "Total",
-    projection: "If each project matched its own stated assumptions",
-    projectionNote: "Plain compounding of each project's assumed annual return over its own horizon. Not a model result and not a promise.",
-    value: (low: string, central: string, high: string) => `${central} (range ${low} to ${high})`,
-    jobs: (n: string) => `about ${n} direct jobs during construction`,
-    holdings: "Your allocations",
-    noHoldings: "Nothing allocated yet. Pick a project below.",
-    move: "Move units between projects",
-    from: "From",
-    to: "To",
-    units: "Virtual units",
-    allocate: "Allocate",
-    withdraw: "Withdraw",
-    moveButton: "Move",
-    activity: "Recent activity",
-    entry: { grant: "Received", allocate: "Allocated to", withdraw: "Withdrew from" },
-    projects: "Projects",
-    privateReturn: "Private financial return (to investors)",
-    perYear: "per year",
-    range: (lo: string, hi: string) => `assumed range ${lo} to ${hi}`,
-    social: "Social and environmental effects",
-    jobsPerMillion: (n: number) => `${n} direct jobs per V$1m`,
-    funding: "Funding",
-    target: "Total cost",
-    publicPart: "Public contribution",
-    privatePart: "Sought from private capital",
-    risk: { low: "Low risk", medium: "Medium risk", high: "High risk" },
-    years: (n: number) => `${n}-year horizon`,
-    assumptions: "Assumptions",
-    participants: (units: string, n: number) => `${units} in virtual units from ${n} participants`,
-    tooFew: "Fewer than 5 participants so far: totals stay hidden to protect privacy.",
-    progress: "virtual units vs private capital sought",
-    dashboard: "What participants chose",
-    dashboardLead:
-      "Totals of everyone's virtual allocations, by category. These are participant preferences: they are not model results, and they are not evidence of real investor demand.",
-    dashboardEmpty: "Not enough participants yet. Totals appear once at least 5 people back a project.",
-  },
-  scenarios: {
-    save: "Save this scenario",
-    saveLead: "Saved scenarios are private unless you publish them. Published ones show without your name. The engine re-runs them on demand to prove the results are reproducible.",
-    privacyLink: "How we handle your data",
-    titleLabel: "Title",
-    titleDefault: "My scenario",
-    descriptionLabel: "Notes (optional)",
-    publish: "Publish it on the Community page",
-    saving: "Saving…",
-    saved: "Saved.",
-    open: "Open the saved scenario",
-    signIn: "Sign in with Google to save scenarios",
-    mine: "Your scenarios",
-    none: "No saved scenarios yet. Run one in the lab and save it.",
-    private: "Private",
-    public: "Published",
-    horizon: (n: number) => `${n}-year horizon`,
-    savedOn: "Saved",
-    model: (v: string) => `Model v${v}`,
-    changed: "Levers changed from Verdania today",
-    unchanged: "No levers changed: this is Verdania's baseline.",
-    results: (year: number) => `Results in year ${year} vs baseline`,
-    openLab: "Open in the lab",
-    verify: "Re-run and verify",
-    verifying: "Re-running…",
-    match: "Reproduced exactly: same inputs, same model version, identical results.",
-    fingerprint: "Output fingerprint",
-    makePublic: "Publish",
-    makePrivate: "Unpublish",
-    delete: "Delete",
-    community: "Published scenarios",
-    communityLead: "Scenarios participants chose to publish, with their assumptions. Model outputs for a fictional country, not forecasts.",
-    communityEmpty: "No published scenarios yet. Save one from the lab and tick \"Publish\".",
   },
   methodology: {
     eyebrow: "Research and methodology",
@@ -504,12 +337,6 @@ export const t = {
     structural: "Structural parameters (uncertain, drawn in every run)",
     columns: { parameter: "Parameter", baseline: "Verdania today", range: "Range", central: "Central", evidence: "Evidence" },
     crossesZero: "range crosses zero",
-    evidence: {
-      "empirical-range": { label: "Empirical range", text: "The range comes from published studies." },
-      contested: { label: "Contested", text: "Researchers disagree, sometimes on the direction of the effect." },
-      theoretical: { label: "Theoretical", text: "Grounded in theory, with little direct measurement." },
-      synthetic: { label: "Synthetic", text: "A modelling choice for this fictional country." },
-    },
     noParameters: "The parameter registry isn't reachable right now. Nothing is shown rather than a guess.",
     uncertainty: [
       "Each run draws every structural parameter 40 times from a triangular distribution over its range, most likely at the central value. Your policy levers are never randomised.",
@@ -601,74 +428,11 @@ export const t = {
     higher: "higher than today",
     lower: "lower than today",
     outcomes: "The economy after ten years",
+    outcomesCaption: (h: number) => `The economy after ten years: year ${h}, compared with today's policies`,
     outcomesLead: (h: number) =>
       `Engine results for year ${h}, each compared with keeping today's policies, with the range across uncertain assumptions.`,
     justice: "Who gains and who loses: compare them on social justice",
     open: "Open in the Lab",
-  },
-  contribute: {
-    eyebrow: "Contribute",
-    title: "Share an idea or a suggestion",
-    lead: "Verdania is built in the open. Tell us what the model gets wrong, a policy or economic system to add, a data source worth using, or anything that is unclear. Messages go straight to the project team.",
-    topic: "What is it about?",
-    topics: {
-      model: "The model or its assumptions",
-      policy: "A policy or economic system to add",
-      data: "Data or a source",
-      problem: "Something is wrong or unclear",
-      other: "Something else",
-    },
-    message: "Your message",
-    messageHint: "10 to 4,000 characters.",
-    name: "Name (optional)",
-    email: "Email (optional, if you'd like a reply)",
-    privacy:
-      "We keep your message, and your name and email if you give them, only to read it and reply. Nothing you send here is published or shared. To have a message deleted, send another one asking for that.",
-    send: "Send",
-    sending: "Sending…",
-    thanks: "Thank you. Your message has been received.",
-    invalid: "Please check your message (10 to 4,000 characters) and your email address.",
-    busy: "Too many messages right now. Please try again in a few minutes.",
-    error: "Your message couldn't be sent right now and nothing was stored. Please try again later.",
-    footer: "Share an idea",
-  },
-  discover: {
-    eyebrow: "The country",
-    title: "Discover Verdania",
-    lead: "A fictional, agriculture-led country of 2,000,000 synthetic people in six regions: grain plains, a river delta, a coastal port, an industrial belt, highlands and the capital. Pick a region to see how geography shapes work, income and health.",
-    synthetic: "Synthetic data",
-    layer: "Colour the map by",
-    layers: {
-      mean_income: "Income",
-      poverty_relative: "Poverty",
-      unemployment: "Unemployment",
-      health_access: "Health access",
-      sector_share_agriculture: "Farm jobs",
-    },
-    layerTitle: {
-      mean_income: "Mean disposable income per person (equivalised)",
-      poverty_relative: "Relative poverty (below 60% of the national median)",
-      unemployment: "Unemployment rate",
-      health_access: "Health access index",
-      sector_share_agriculture: "Share of the workforce in agriculture",
-    },
-    low: "Lower",
-    high: "Higher",
-    map: "Map of Verdania. Each region is a button: choose one to see its figures.",
-    selected: (name: string) => `${name} selected. Its figures are shown next to the map.`,
-    people: "People",
-    area: "Area",
-    density: (n: string) => `${n} people per km²`,
-    national: (v: string) => `Verdania: ${v}`,
-    jobs: "Where people work",
-    jobsNote: "Share of the region's workforce, by sector.",
-    experiment: "Test a policy in the Lab",
-    table: "All six regions",
-    tableCaption: "The six regions of Verdania with their synthetic baseline figures. The table holds the same information as the map.",
-    region: "Region",
-    footnote: (version: string) =>
-      `Synthetic baseline · model v${version} · not real-world data. Every policy applies nationally today; region-level levers come in a later model version.`,
-    error: "The regional data isn't reachable right now. Nothing is shown rather than a guess.",
   },
   justice: {
     eyebrow: "Social justice",
@@ -692,6 +456,7 @@ export const t = {
     market: "Market income",
     disposable: "Disposable income",
     systems: "Four economic systems, one yardstick",
+    systemsCaption: (h: number) => `Four economic systems, one yardstick: year ${h}, compared with today's policies`,
     systemsLead: (h: number) =>
       `Each system is a complete policy bundle that keeps its deficit within 3% of output. Figures are for year ${h}, each compared with keeping today's policies, with the range across uncertain assumptions.`,
     keepToday: "Today's policies",
@@ -705,3 +470,6 @@ export const t = {
     error: "The simulation engine isn't reachable right now. Nothing is shown rather than a guess.",
   },
 } as const;
+
+
+export type Messages = Widen<typeof en>;

@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import { RegionExplorer } from "@/components/discover/region-explorer";
 import { getBaseline, getRegions } from "@/lib/data";
 import { fmtValue } from "@/lib/format";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 import { LAYERS } from "@/lib/regions";
 
-export const metadata: Metadata = { title: "Discover Verdania", description: t.discover.lead };
-
-const d = t.discover;
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.discover.title, description: t.discover.lead };
+}
 
 export default async function DiscoverPage() {
-  const [baseline, regions] = await Promise.all([getBaseline(), getRegions()]);
+  const [baseline, stored, t] = await Promise.all([getBaseline(), getRegions(), getT()]);
+  const d = t.discover;
+  const regions = stored.map((r) => ({ ...r, description: t.model.regions[r.code] ?? r.description }));
   const ind = baseline?.indicators ?? {};
   const people = regions.reduce((s, r) => s + r.population, 0);
   // Regional means weighted by population give the national mean; the other national figures are stored.
