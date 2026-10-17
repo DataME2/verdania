@@ -59,6 +59,20 @@ body {
   scroll-margin-top: 6rem;
 }
 
+/* Below lg the Lab's lever bar and sheet sit over the page: keep whatever has focus, and the end of the
+   footer, clear of them (WCAG 2.4.11). */
+@media (width < 64rem) {
+  html:has(#lever-bar) {
+    scroll-padding-bottom: 6rem;
+  }
+  html:has(#lab-levers[data-open]) {
+    scroll-padding-bottom: 57dvh;
+  }
+  html:has(#lever-bar) footer {
+    padding-bottom: 8rem;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-vivid);
   outline-offset: 2px;

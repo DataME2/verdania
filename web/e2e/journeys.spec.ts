@@ -92,6 +92,43 @@ test("Challenge this result: an assumption override shows as a chip, travels in 
   clean();
 });
 
+test("Mobile Lab: the levers open in a bottom sheet over the results; Escape returns to the bar", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto("/experiment");
+  const slider = page.getByLabel("Top income-tax rate", { exact: true });
+  const bar = page.getByRole("button", { name: /Adjust the levers/ });
+  await expect(slider).toBeHidden();
+  await expect(bar).toHaveAttribute("aria-expanded", "false");
+
+  await bar.click();
+  await expect(bar).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: "Done" })).toBeFocused();
+  await expect(page.getByText("GDP per person", { exact: true }).first()).toBeInViewport(); // the results stay in sight above the sheet
+  await slider.focus();
+  await page.keyboard.press("End");
+  await expect(page).toHaveURL(/tau_top=0\.7/);
+  clean(); // before axe, whose own stylesheet fetch the CSP blocks
+  const { violations } = await new AxeBuilder({ page }).include("#lab-levers").withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+
+  await page.keyboard.press("Escape");
+  await expect(slider).toBeHidden();
+  await expect(bar).toBeFocused();
+  await expect(bar).toContainText("1 lever changed");
+});
+
+test("Performance: the homepage loads under 200 KB of compressed JavaScript (PRD §6)", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  const bytes = await page.evaluate(() =>
+    (performance.getEntriesByType("resource") as PerformanceResourceTiming[])
+      .filter((e) => new URL(e.name).pathname.endsWith(".js"))
+      .reduce((sum, e) => sum + e.transferSize, 0),
+  );
+  expect(bytes).toBeGreaterThan(0);
+  expect(bytes).toBeLessThan(200 * 1024);
+});
+
 test("keyboard: the first Tab reaches the skip link, which moves to the content", async ({ page }) => {
   await page.goto("/methodology");
   await page.keyboard.press("Tab");
