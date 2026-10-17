@@ -237,6 +237,13 @@ export const t = {
     privacyLink: "Read the privacy notice",
     noAccount: "Explore without an account",
   },
+  error: {
+    title: "Something went wrong",
+    lead: "This page hit an unexpected error. Reloading usually fixes it.",
+    outdatedTitle: "Verdania was updated while this page was open",
+    outdated: "This page belongs to the previous version, so what you just did was not completed. Reload the page and try again.",
+    reload: "Reload the page",
+  },
   privacy: {
     title: "Privacy",
     footer: "Privacy",
