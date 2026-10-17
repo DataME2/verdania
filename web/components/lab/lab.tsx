@@ -7,7 +7,7 @@ import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, SlidersHorizontal
 import type { Evidence, Lever, Parameter } from "@/lib/data";
 import { fmtDelta, fmtParam, fmtValue } from "@/lib/format";
 import { LEVER_GROUPS } from "@/lib/levers";
-import { en } from "@/lib/messages";
+import { enClient } from "@/lib/messages.client";
 import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
 import { DeltaChip, IndicatorCard } from "./indicator-card";
@@ -20,7 +20,7 @@ import { useSimulation } from "./use-simulation";
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
 
 // Challenge slugs are the same in every language; their questions and suggestions are read per language.
-const SLUGS = en.experiment.challenges.map((c) => c.slug);
+const SLUGS = enClient.experiment.challenges.map((c) => c.slug);
 const REGION_COLS = [
   { code: "mean_income", unit: "V$", desirable: "up" },
   { code: "poverty_relative", unit: "share", desirable: "down" },
@@ -285,8 +285,8 @@ export function Lab({
                 const group = assumptions.filter((a) => a.evidence === ev);
                 return group.length ? (
                   <fieldset key={ev} className="mt-5">
-                    <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.methodology.evidence[ev].label}</legend>
-                    <p className="mt-1 text-[11px] text-ink/70">{t.methodology.evidence[ev].text}</p>
+                    <legend className="text-xs font-bold uppercase tracking-[.18em] text-leaf">{t.evidence[ev].label}</legend>
+                    <p className="mt-1 text-[11px] text-ink/70">{t.evidence[ev].text}</p>
                     <div className="mt-2 space-y-2">
                       {group.map((a) => (
                         <LeverSlider key={a.code} lever={a} assumption value={s.structural[a.code] ?? a.base} onChange={(v) => setAssumption(a, v)} />

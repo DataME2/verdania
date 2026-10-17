@@ -59,7 +59,7 @@ export function SensitivityPanel({ request }: { request: SimRequest }) {
                 <li key={r.parameter} className="grid gap-1 text-sm sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:items-center sm:gap-4">
                   <div>
                     <span className="font-semibold text-ink/80">{r.label}</span>{" "}
-                    <span className="whitespace-nowrap text-[11px] font-bold text-leaf">{t.methodology.evidence[r.evidence].label}</span>
+                    <span className="whitespace-nowrap text-[11px] font-bold text-leaf">{t.evidence[r.evidence].label}</span>
                     <span className="block text-[11px] text-ink/70">
                       {c.low} {fmtParam(r.low)}: {fmtDelta(r.effect[target]?.low, unit, locale)} · {c.high} {fmtParam(r.high)}: {fmtDelta(r.effect[target]?.high, unit, locale)}
                     </span>

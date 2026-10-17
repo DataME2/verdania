@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { fmtDelta, fmtValue, tone, type Tone } from "@/lib/format";
-import { messages } from "@/lib/i18n";
+import { clientMessages as messages } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { Indicator } from "@/lib/sim-types";
 

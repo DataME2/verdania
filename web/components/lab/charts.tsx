@@ -1,7 +1,7 @@
 // Hand-drawn SVG charts: two chart types don't justify a charting library. Each has a text summary
 // and a data table (native <details>) as the non-visual alternative.
 import { fmtValue } from "@/lib/format";
-import { messages } from "@/lib/i18n";
+import { clientMessages as messages } from "@/lib/i18n";
 import type { Locale } from "@/lib/locale";
 import type { Indicator, Series } from "@/lib/sim-types";
 

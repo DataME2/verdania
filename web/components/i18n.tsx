@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { messages } from "@/lib/i18n";
+import { clientMessages } from "@/lib/i18n";
 import { LOCALE_COOKIE, type Locale } from "@/lib/locale";
 
 const LocaleContext = createContext<Locale>("en");
@@ -12,7 +12,7 @@ export function LocaleProvider({ locale, children }: { locale: Locale; children:
 }
 
 export const useLocale = () => useContext(LocaleContext);
-export const useT = () => messages[useLocale()];
+export const useT = () => clientMessages[useLocale()];
 
 /** Switches to the other language: remembered in a cookie, then the page reloads in it. */
 export function LanguageSwitch({ className }: { className?: string }) {

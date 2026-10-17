@@ -92,10 +92,10 @@ export default async function MethodologyPage() {
           ) : (
             <>
               <dl className="grid gap-2 sm:grid-cols-2">
-                {(Object.keys(m.evidence) as Evidence[]).map((k) => (
+                {(Object.keys(t.evidence) as Evidence[]).map((k) => (
                   <div key={k} className="flex items-start gap-2 text-sm">
-                    <dt><EvidenceBadge m={m} kind={k} /></dt>
-                    <dd className="text-ink/75">{m.evidence[k].text}</dd>
+                    <dt><EvidenceBadge t={t} kind={k} /></dt>
+                    <dd className="text-ink/75">{t.evidence[k].text}</dd>
                   </div>
                 ))}
               </dl>
@@ -156,8 +156,8 @@ function Section({ m, id, children }: { m: M; id: keyof M["sections"]; children:
   );
 }
 
-function EvidenceBadge({ m, kind }: { m: M; kind: Evidence }) {
-  return <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${EVIDENCE_STYLE[kind]}`}>{m.evidence[kind].label}</span>;
+function EvidenceBadge({ t, kind }: { t: Messages; kind: Evidence }) {
+  return <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${EVIDENCE_STYLE[kind]}`}>{t.evidence[kind].label}</span>;
 }
 
 // Below `sm` the value columns collapse into the parameter cell, so the table never needs sideways scrolling.
@@ -190,7 +190,7 @@ function ParamTable({ m, t, locale, caption, rows, lever }: { m: M; t: Messages;
                     <span>{lever ? m.columns.baseline : m.columns.central}: {value}</span>
                     <span>{m.columns.range}: {range}</span>
                     {zero && <span className="font-bold text-ink/70">{m.crossesZero}</span>}
-                    {!lever && <EvidenceBadge m={m} kind={p.evidence} />}
+                    {!lever && <EvidenceBadge t={t} kind={p.evidence} />}
                   </span>
                 </th>
                 <td className={`${wide} whitespace-nowrap tabular-nums`}>{value}</td>
@@ -198,7 +198,7 @@ function ParamTable({ m, t, locale, caption, rows, lever }: { m: M; t: Messages;
                   {range}
                   {zero && <span className="mt-1 block text-xs font-bold text-ink/70">{m.crossesZero}</span>}
                 </td>
-                {!lever && <td className={`${wide} pr-5`}><EvidenceBadge m={m} kind={p.evidence} /></td>}
+                {!lever && <td className={`${wide} pr-5`}><EvidenceBadge t={t} kind={p.evidence} /></td>}
               </tr>
             );
           })}

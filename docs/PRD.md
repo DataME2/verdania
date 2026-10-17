@@ -159,5 +159,5 @@ Browser (Next.js app, TypeScript)
 1. **Hosting — decided 2026-10-16:** AWS, owner's own account, `ap-southeast-2`. Web on **AWS Amplify Hosting** (auto-deploys `main` via `amplify.yml`; Amplify supports Next.js ≤ 15, so `web/` runs Next.js 15). Engine on **AWS Lambda** (python3.12, arm64) behind a Function URL, called only by the website's server with `SIM_API_KEY` (`sim/deploy/`). DNS in Route 53. **Domain decided:** `https://verdania.datamanagementengineer.com`. Supabase Site URL = this domain; redirect allow-list = `http://localhost:3000/auth/callback` and `https://verdania.datamanagementengineer.com/auth/callback`.
 2. **Central parameter values** in model spec §8.2, especially the contested ones (`eta_mw`, `psi`, `zeta_own`, `theta_cb`). These need review by an economist before publication.
 3. **Google Cloud project** that owns the OAuth client and consent screen (brand: Let's the Data Talk).
-4. **Languages** after English, and in what order.
+4. **Languages — decided 2026-10-17:** Spanish after English, as neutral Latin American Spanish (`es-419`, informal "tú"; numbers written as in English). Chosen by a saved cookie, else the browser's Accept-Language; same URLs for both languages (M16).
 5. **Community forum** moderation model, before it is built (v0.2).
