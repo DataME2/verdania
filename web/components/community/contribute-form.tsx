@@ -3,12 +3,12 @@
 import { useActionState } from "react";
 import { Send } from "lucide-react";
 import { submitSuggestion, type SuggestionState } from "@/app/community/actions";
-import { t } from "@/lib/messages";
+import { useT } from "../i18n";
 
-const c = t.contribute;
 const field = "mt-1 w-full rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm font-normal";
 
 export function ContributeForm() {
+  const c = useT().contribute;
   const [state, action, pending] = useActionState<SuggestionState, FormData>(submitSuggestion, {});
 
   return (

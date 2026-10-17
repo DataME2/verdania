@@ -3,6 +3,7 @@
 import { RotateCcw } from "lucide-react";
 import { fmtLever, fmtParam } from "@/lib/format";
 import type { Lever } from "@/lib/data";
+import { useLocale, useT } from "../i18n";
 
 /**
  * Native range input: keyboard, touch and screen readers work out of the box.
@@ -19,9 +20,11 @@ export function LeverSlider({
   onChange: (v: number) => void;
   assumption?: boolean;
 }) {
+  const t = useT().slider;
+  const locale = useLocale();
   const changed = Math.abs(value - lever.base) > 1e-9;
   const step = assumption ? (lever.max - lever.min) / 50 : lever.unit === "share of output" ? 0.001 : 0.01;
-  const show = (v: number, unit: string | null) => (assumption ? fmtParam(v) : fmtLever(v, unit));
+  const show = (v: number, unit: string | null) => (assumption ? fmtParam(v) : fmtLever(v, unit, locale));
   const id = `${assumption ? "assumption" : "lever"}-${lever.code}`;
   return (
     <div className={`rounded-2xl p-3 transition ${changed ? "bg-sun/15 ring-2 ring-sun" : ""}`}>
@@ -47,16 +50,16 @@ export function LeverSlider({
       />
       <div id={`${id}-base`} className="mt-1 flex items-center justify-between text-[11px] text-ink/70">
         <span>
-          {show(lever.min, null)} – {show(lever.max, null)} · {assumption ? "central" : "Verdania today"} {show(lever.base, null)}
+          {show(lever.min, null)} – {show(lever.max, null)} · {assumption ? t.central : t.today} {show(lever.base, null)}
         </span>
         {changed && (
           <button
             type="button"
             onClick={() => onChange(lever.base)}
             className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold text-forest hover:bg-white"
-            aria-label={`Reset ${lever.label} to ${assumption ? "its central value" : "today's value"}`}
+            aria-label={t.reset(lever.label, assumption)}
           >
-            <RotateCcw className="h-3 w-3" aria-hidden="true" /> Undo
+            <RotateCcw className="h-3 w-3" aria-hidden="true" /> {t.undo}
           </button>
         )}
       </div>

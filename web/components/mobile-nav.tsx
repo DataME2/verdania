@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { t } from "@/lib/messages";
+import { LanguageSwitch, useT } from "./i18n";
 import { GoogleIcon } from "./icons";
 
 // Native <dialog>: focus trap, Escape to close and inert background come from the browser.
 export function MobileNav() {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const close = () => dialog.current?.close();
 
@@ -26,10 +27,10 @@ export function MobileNav() {
         ref={dialog}
         onClick={(e) => e.target === dialog.current && close()}
         className="m-0 ml-auto h-full max-h-none w-[85%] max-w-sm bg-cream p-6 text-ink shadow-lift backdrop:bg-ink/40"
-        aria-label="Navigation menu"
+        aria-label={t.cta.menuDialog}
       >
         <div className="flex items-center justify-between">
-          <span className="font-display text-xl font-semibold text-forest">Menu</span>
+          <span className="font-display text-xl font-semibold text-forest">{t.cta.menuTitle}</span>
           <button
             type="button"
             onClick={close}
@@ -39,7 +40,7 @@ export function MobileNav() {
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <nav className="mt-8 flex flex-col gap-1" aria-label="Mobile navigation">
+        <nav className="mt-8 flex flex-col gap-1" aria-label={t.cta.mobileNav}>
           {t.nav.map((item) => (
             <Link
               key={item.href}
@@ -68,6 +69,7 @@ export function MobileNav() {
           >
             <GoogleIcon /> {t.cta.google}
           </Link>
+          <LanguageSwitch className="min-h-12 rounded-full px-5 font-bold text-forest underline" />
         </div>
       </dialog>
     </>

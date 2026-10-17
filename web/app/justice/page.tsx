@@ -4,16 +4,21 @@ import { Suspense } from "react";
 import { DecileChart } from "@/components/lab/charts";
 import { H, SystemsTable } from "@/components/systems-table";
 import { fmtValue } from "@/lib/format";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
 import { runOrNull } from "@/lib/sim";
+import { localized } from "@/lib/sim-localized";
 
-export const metadata: Metadata = { title: "Social Justice", description: t.justice.lead };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.nav.find((n) => n.href === "/justice")?.label, description: t.justice.lead };
+}
 
-const j = t.justice;
 const TODAY = ["gini_market", "gini_disposable", "poverty_relative", "wealth_top10", "wealth_top1", "labour_share", "catastrophic_health", "regional_ratio"];
 const COMPARE = ["median_income", "poverty_relative", "poverty_anchored", "gini_market", "gini_disposable", "wealth_top10", "wealth_top1", "labour_share", "catastrophic_health", "regional_ratio"];
 
-export default function JusticePage() {
+export default async function JusticePage() {
+  const t = await getT();
+  const j = t.justice;
   return (
     <section className="px-5 py-12 lg:px-10 lg:py-16">
       <div className="mx-auto max-w-[1240px]">
@@ -33,7 +38,8 @@ export default function JusticePage() {
 
 async function Results() {
   // every figure on this page is an engine run, cached by input
-  const today = await runOrNull({ levers: {}, horizon: 1 });
+  const [today, t, locale] = await Promise.all([runOrNull({ levers: {}, horizon: 1 }).then(localized), getT(), getLocale()]);
+  const j = t.justice;
   const deciles = today?.deciles.baseline;
 
   return (
@@ -73,6 +79,7 @@ async function Results() {
                   baseline={deciles.market}
                   scenario={deciles.disposable}
                   year={today.deciles.year}
+                  locale={locale}
                   names={[j.market, j.disposable]}
                   title={j.redistribution}
                 />
@@ -86,7 +93,7 @@ async function Results() {
       <section className="mt-14" aria-labelledby="systems">
         <h2 id="systems" className="font-display text-3xl font-semibold text-forest">{j.systems}</h2>
         <p className="mt-2 max-w-3xl text-sm text-ink/70">{j.systemsLead(H)}</p>
-        <SystemsTable codes={COMPARE} labelledBy="systems" caption={`${j.systems}: year ${H}, compared with today's policies`} />
+        <SystemsTable codes={COMPARE} labelledBy="systems" caption={j.systemsCaption(H)} />
         <p className="mt-4 max-w-3xl text-sm text-ink/70">
           {j.caveat}{" "}
           <Link href="/methodology" className="font-bold text-forest underline underline-offset-2">{t.experiment.methodology}</Link>

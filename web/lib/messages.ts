@@ -1,30 +1,73 @@
-// UI copy, English. Another language = another object with the same shape.
-export const CATEGORY: Record<string, string> = {
-  agriculture: "Agriculture",
-  food_processing: "Food processing",
-  renewable_energy: "Renewable energy",
-  infrastructure: "Infrastructure",
-  technology: "Technology and innovation",
-  housing: "Housing",
-  healthcare: "Healthcare",
-  education: "Education and training",
-  cooperatives: "Worker cooperatives",
-  sme: "Small and medium businesses",
-  ppp: "Public-private partnership",
-  community: "Community development",
-  public_fund: "Public investment fund",
+// UI copy, English. Spanish is in messages.es.ts, with the same shape (the Messages type checks it).
+
+/**
+ * Text that reaches the site in English from the engine or the database, keyed by code. English leaves
+ * every map empty, so the source text shows; another language fills them in. Anything missing falls back
+ * to the source text, so a new indicator or project never shows a blank.
+ */
+export type ModelText = {
+  indicators: Record<string, string>;
+  /** Mechanism explanations by lever code, with {parameter} placeholders filled from the run's values. */
+  mechanisms: Record<string, string>;
+  /** The engine's fixed assumptions, in the engine's order; null keeps the engine's text. */
+  assumptions: readonly string[] | null;
+  /** The fiscal-closure line the engine adds to its assumptions, by closure code. */
+  closure: Record<string, string>;
+  /** Not-modelled items, keyed by the engine's English phrase. */
+  notModelled: Record<string, string>;
+  /** A sustainability flag: the indicator's label and its limit. */
+  exceeds: ((label: string, limit: string) => string) | null;
+  params: Record<string, string>;
+  presets: Record<string, string>;
+  regions: Record<string, string>;
+  versions: Record<string, string>;
+  projects: Record<string, { title: string; summary: string; social: string; environmental: string }>;
+  /** Project assumptions, keyed by their English text. */
+  projectAssumptions: Record<string, string>;
 };
 
-export const SECTOR: Record<string, string> = {
-  agriculture: "Agriculture",
-  food_processing: "Food processing",
-  industry_energy: "Industry and energy",
-  construction: "Construction",
-  private_services: "Private services",
-  public_services: "Public services",
+const sourceText: ModelText = {
+  indicators: {},
+  mechanisms: {},
+  assumptions: null,
+  closure: {},
+  notModelled: {},
+  exceeds: null,
+  params: {},
+  presets: {},
+  regions: {},
+  versions: {},
+  projects: {},
+  projectAssumptions: {},
 };
 
-export const t = {
+export const en = {
+  locale: "en",
+  language: { switchTo: "Español", switchLabel: "Ver el sitio en español" },
+  categories: {
+    agriculture: "Agriculture",
+    food_processing: "Food processing",
+    renewable_energy: "Renewable energy",
+    infrastructure: "Infrastructure",
+    technology: "Technology and innovation",
+    housing: "Housing",
+    healthcare: "Healthcare",
+    education: "Education and training",
+    cooperatives: "Worker cooperatives",
+    sme: "Small and medium businesses",
+    ppp: "Public-private partnership",
+    community: "Community development",
+    public_fund: "Public investment fund",
+  } as Record<string, string>,
+  sectors: {
+    agriculture: "Agriculture",
+    food_processing: "Food processing",
+    industry_energy: "Industry and energy",
+    construction: "Construction",
+    private_services: "Private services",
+    public_services: "Public services",
+  } as Record<string, string>,
+  model: sourceText,
   brand: { name: "VERDANIA", tagline: "An open economic laboratory", home: "Verdania home" },
   nav: [
     { href: "/discover", label: "Discover Verdania" },
@@ -36,7 +79,19 @@ export const t = {
     { href: "/methodology", label: "Research and Methodology" },
     { href: "/community", label: "Community" },
   ],
+  common: { loading: "Loading…", between: (lo: string, hi: string) => `${lo} to ${hi}` },
+  meta: {
+    title: "Verdania: Can an economy serve humanity?",
+    description:
+      "An interactive economic laboratory: experiment with economic models, public policies and virtual investment in Verdania, a fictional country of 2,000,000 synthetic people.",
+  },
   cta: {
+    skip: "Skip to content",
+    primaryNav: "Primary navigation",
+    mobileNav: "Mobile navigation",
+    footerNav: "Footer",
+    menuTitle: "Menu",
+    menuDialog: "Navigation menu",
     experiment: "Run an Experiment",
     google: "Continue with Google",
     explore: "Explore without an account",
@@ -50,6 +105,9 @@ export const t = {
     title: ["Can an economy", "serve humanity?"],
     lead: "Can an economy keep the benefits of markets and private investment while making prosperity serve everyone?",
     art: "Illustration of Verdania's farms, river, city and wind turbines",
+    badgesLabel: "About the data",
+    economyLabel: "Economy",
+    economy: "Agriculture-led",
     flowLabel: "Capital flow",
     flow: "Fields → Factories → Families",
     ticker: "A fictional country · Synthetic population · Transparent assumptions · No real money · No financial advice",
@@ -68,6 +126,7 @@ export const t = {
     environment: "Environmental effects come from each investment project's notes today; the simulation will model them in a later version.",
   },
   stats: {
+    label: "Verdania at a glance",
     population: "Population · 50% women / 50% men",
     employment: "Employment rate (ages 15–64)",
     gdp: "GDP per person",
@@ -85,11 +144,15 @@ export const t = {
     recalculating: "Recalculating…",
     footnote: (version: string, draws: number) =>
       `Model v${version} · year 10 vs baseline · ranges from ${draws} draws of uncertain assumptions · not a forecast`,
+    runStatus: (version: string, draws: number) => `Model v${version} · ${draws} draws · not a forecast`,
     error: "The simulation engine isn't reachable right now. Nothing is shown rather than a guess.",
+    busy: "Too many requests. Wait a minute and try again.",
+    unavailable: "The simulation engine is unavailable right now.",
   },
   experiment: {
     eyebrow: "Economic lab",
     title: "Run an experiment",
+    description: "Change Verdania's policies and see the simulated consequences, with uncertainty ranges and assumptions.",
     challengeLabel: (n: number) => `Challenge ${n}`,
     challengePick: "Choose a challenge",
     // Each challenge is an open question: its suggested experiments are starting points, never an answer.
@@ -147,6 +210,7 @@ export const t = {
     results: "Results",
     at: (year: number) => `Year ${year} vs baseline`,
     chart: "Over time",
+    indicatorPick: "Indicator",
     whoGains: "Who gains?",
     whoGainsLead: "Disposable income per person (after taxes and transfers), by tenth of the population.",
     where: "Where it lands",
@@ -182,6 +246,39 @@ export const t = {
     audit: "Audit log (latest 50)",
     auditCols: { when: "When", action: "Action", entity: "Item", details: "Details" },
     hiddenNote: "A moderator has hidden this scenario from the Community page. It stays visible to you.",
+  },
+  charts: {
+    noData: "No data for this indicator.",
+    stopped: "Not available: the model stopped before this year.",
+    today: "Today",
+    yearShort: (n: number) => `Y${n}`,
+    year: (n: number) => `Year ${n}`,
+    yearCol: "Year",
+    baseline: "Baseline",
+    scenario: "Scenario",
+    yourScenario: "Your scenario",
+    band: "Range across assumptions (P10–P90)",
+    decile: "Decile",
+    change: "Change",
+    showTable: "Show data table",
+    lineSummary: (label: string, base: string, scenario: string, year: number, lo: string, hi: string) =>
+      `${label}: baseline ${base} and scenario ${scenario} in year ${year}, scenario range ${lo} to ${hi} across assumptions.`,
+    decileTitle: "Disposable income per decile",
+    decileSummary: (title: string, year: number, a: string, b: string, poorest: string, richest: string) =>
+      `${title}, year ${year}. ${b} vs ${a}: poorest tenth ${poorest}%, richest tenth ${richest}%.`,
+    decileKey: (year: number) => `D1 = poorest tenth of people, D10 = richest. Year ${year}.`,
+    withYear: (title: string, year: number) => `${title}, year ${year}`,
+  },
+  slider: {
+    central: "central",
+    today: "Verdania today",
+    undo: "Undo",
+    reset: (label: string, assumption: boolean) => `Reset ${label} to ${assumption ? "its central value" : "today's value"}`,
+  },
+  card: {
+    vsBaseline: "vs baseline",
+    across: (lo: string, hi: string) => `Across assumptions (P10–P90): ${lo} to ${hi}`,
+    recalculating: "Recalculating",
   },
   sensitivity: {
     title: "Which assumptions drive this result?",
@@ -223,6 +320,7 @@ export const t = {
       `An open fictional economy for testing ideas, not predicting the future. Model v${version} · All data synthetic. No real money, securities or investments.`,
   },
   signIn: {
+    meta: "Sign in",
     title: "Continue with Google",
     lead: "You only need an account to save scenarios and join the Virtual Investment Market.",
     storeTitle: "What we store",
@@ -312,6 +410,7 @@ export const t = {
     contactLink: "Send a message",
   },
   authError: {
+    meta: "Sign-in problem",
     title: "Sign-in didn't complete",
     cancelled: "Google sign-in was cancelled or interrupted.",
     exchange: "The sign-in link expired or was already used.",
@@ -320,12 +419,15 @@ export const t = {
   },
   account: {
     title: "Your account",
+    name: "Name",
     since: "Member since",
     visibility: "Profile visibility",
     private: "Private",
     public: "Public",
     signOut: "Sign out",
     portfolio: "Virtual portfolio",
+    holdings: (allocated: string, projects: number, unallocated: string) =>
+      `${allocated} allocated across ${projects} ${projects === 1 ? "project" : "projects"} · ${unallocated} unallocated`,
     notJoined: "You haven't joined the virtual market yet.",
     goMarket: "Go to the market",
     deleteTitle: "Delete your account",
@@ -338,6 +440,23 @@ export const t = {
     deleteError: "Your account couldn't be deleted right now. Nothing was removed. Please try again later.",
   },
   market: {
+    description: "Allocate 100,000 virtual units to Verdania's projects. Virtual capital only: no real money or investments.",
+    allocateMore: "Allocate more",
+    project: "Project",
+    aProject: "a project",
+    theMarket: "the market",
+    people: (n: number) => `${n} ${n === 1 ? "person" : "people"}`,
+    moved: (units: string) => `${units} virtual units moved.`,
+    errors: {
+      unallocated: "You don't have that many unallocated virtual units.",
+      source: "That project doesn't hold that many of your units.",
+      join: "Join the virtual market first.",
+      signIn: "Sign in to use the virtual market.",
+      unknown: "That project isn't available.",
+      whole: "Enter a whole number of units.",
+      choose: "Choose a project.",
+      failed: "That didn't work. Nothing was changed.",
+    },
     eyebrow: "Virtual investment market",
     title: "Put 100,000 virtual units to work",
     lead: "Choose which of Verdania's projects to back with virtual capital. Each project shows its private financial return separately from its social and environmental effects.",
@@ -417,6 +536,24 @@ export const t = {
     makePublic: "Publish",
     makePrivate: "Unpublish",
     delete: "Delete",
+    fallbackTitle: "Scenario",
+    untitled: "Untitled scenario",
+    deleteWarning: (published: boolean) =>
+      `This permanently deletes the scenario${published ? " and removes it from the Community page" : ""}.`,
+    deleteForever: "Delete permanently",
+    errors: {
+      signIn: "Sign in to save scenarios.",
+      unreadable: "Couldn't read the scenario.",
+      limit: (n: number) => `You can keep up to ${n} scenarios. Delete one first.`,
+      engine: "The simulation engine is unavailable right now. Nothing was saved.",
+      engineUpdate: "The simulation engine needs an update before scenarios can be saved.",
+      save: "Couldn't save the scenario. Nothing was stored.",
+      notFound: "Scenario not found.",
+      rerun: "The engine couldn't re-run this scenario right now.",
+      version: (saved: string, now: string) => `Saved with model v${saved}; the engine now runs v${now}.`,
+      differs: "Same inputs and model version, but the results differ from the saved run.",
+    },
+    communityEyebrow: "Community",
     community: "Published scenarios",
     communityLead: "Scenarios participants chose to publish, with their assumptions. Model outputs for a fictional country, not forecasts.",
     communityEmpty: "No published scenarios yet. Save one from the lab and tick \"Publish\".",
@@ -601,6 +738,7 @@ export const t = {
     higher: "higher than today",
     lower: "lower than today",
     outcomes: "The economy after ten years",
+    outcomesCaption: (h: number) => `The economy after ten years: year ${h}, compared with today's policies`,
     outcomesLead: (h: number) =>
       `Engine results for year ${h}, each compared with keeping today's policies, with the range across uncertain assumptions.`,
     justice: "Who gains and who loses: compare them on social justice",
@@ -692,6 +830,7 @@ export const t = {
     market: "Market income",
     disposable: "Disposable income",
     systems: "Four economic systems, one yardstick",
+    systemsCaption: (h: number) => `Four economic systems, one yardstick: year ${h}, compared with today's policies`,
     systemsLead: (h: number) =>
       `Each system is a complete policy bundle that keeps its deficit within 3% of output. Figures are for year ${h}, each compared with keeping today's policies, with the range across uncertain assumptions.`,
     keepToday: "Today's policies",
@@ -705,3 +844,16 @@ export const t = {
     error: "The simulation engine isn't reachable right now. Nothing is shown rather than a guess.",
   },
 } as const;
+
+/** Deep-widens the English literals, so another language can say the same things in its own words. */
+type Widen<T> = T extends string
+  ? string
+  : T extends (...args: infer A) => infer R
+    ? (...args: A) => Widen<R>
+    : T extends readonly (infer U)[]
+      ? readonly Widen<U>[]
+      : T extends object
+        ? { -readonly [K in keyof T]: Widen<T[K]> }
+        : T;
+
+export type Messages = Widen<typeof en>;

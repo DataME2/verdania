@@ -8,12 +8,14 @@ import { LeverSlider } from "@/components/lab/lever-slider";
 import { useSimulation } from "@/components/lab/use-simulation";
 import type { Lever } from "@/lib/data";
 import { fmtDelta } from "@/lib/format";
-import { t } from "@/lib/messages";
+import { useLocale, useT } from "./i18n";
 
 const CARDS = ["gdp_pc", "gini_disposable", "poverty_relative", "debt_share"];
 const YEAR = 10;
 
 export function MiniLab({ levers }: { levers: Lever[] }) {
+  const t = useT();
+  const locale = useLocale();
   const base = Object.fromEntries(levers.map((l) => [l.code, l.base]));
   const [values, setValues] = useState<Record<string, number>>(base);
   const sim = useSimulation({ levers: values, horizon: YEAR });
@@ -56,7 +58,7 @@ export function MiniLab({ levers }: { levers: Lever[] }) {
             </p>
           ) : (
             CARDS.map((code) => (
-              <IndicatorCard key={code} indicator={sim.data?.indicators[code]} year={YEAR} loading={sim.status === "loading"} />
+              <IndicatorCard key={code} indicator={sim.data?.indicators[code]} year={YEAR} loading={sim.status === "loading"} locale={locale} />
             ))
           )}
         </div>
@@ -74,7 +76,7 @@ export function MiniLab({ levers }: { levers: Lever[] }) {
                   <span className="text-ink/70">
                     (
                     {m.effects
-                      .map((e) => `${sim.data.indicators[e.indicator]?.label ?? e.indicator}: ${fmtDelta(e.delta_at_horizon, sim.data.indicators[e.indicator]?.unit ?? "index")}`)
+                      .map((e) => `${sim.data.indicators[e.indicator]?.label ?? e.indicator}: ${fmtDelta(e.delta_at_horizon, sim.data.indicators[e.indicator]?.unit ?? "index", locale)}`)
                       .join("; ")}
                     )
                   </span>

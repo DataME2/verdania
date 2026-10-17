@@ -5,11 +5,14 @@ import { ShieldCheck } from "lucide-react";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { GoogleIcon } from "@/components/icons";
 import { safeNext } from "@/lib/safe-next";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 
-export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).signIn.meta, robots: { index: false } };
+}
 
-export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
+export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
+  const t = await getT();
   return (
     <section className="px-5 py-20 lg:py-28">
       <div className="mx-auto max-w-xl rounded-[2rem] bg-white p-8 shadow-soft sm:p-10">
@@ -27,8 +30,8 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
           </ul>
         </div>
 
-        <Suspense fallback={<GoogleButton next="/" />}>
-          <SignInForm searchParams={searchParams} />
+        <Suspense fallback={<GoogleButton next="/" label={t.cta.google} />}>
+          <SignInForm searchParams={searchParams} label={t.cta.google} />
         </Suspense>
         <p className="mt-3 text-center text-xs text-ink/70">
           {t.signIn.consent}{" "}
@@ -42,12 +45,12 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   );
 }
 
-async function SignInForm({ searchParams }: Pick<PageProps<"/sign-in">, "searchParams">) {
+async function SignInForm({ searchParams, label }: Pick<PageProps<"/sign-in">, "searchParams"> & { label: string }) {
   const next = safeNext([(await searchParams).next].flat()[0]);
-  return <GoogleButton next={next} />;
+  return <GoogleButton next={next} label={label} />;
 }
 
-function GoogleButton({ next }: { next: string }) {
+function GoogleButton({ next, label }: { next: string; label: string }) {
   return (
     <form action={signInWithGoogle} className="mt-8">
       <input type="hidden" name="next" value={next} />
@@ -55,7 +58,7 @@ function GoogleButton({ next }: { next: string }) {
         type="submit"
         className="inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-forest/20 bg-white px-6 font-bold text-ink shadow-sm transition hover:border-forest hover:shadow-soft"
       >
-        <GoogleIcon className="h-5 w-5" /> {t.cta.google}
+        <GoogleIcon className="h-5 w-5" /> {label}
       </button>
     </form>
   );

@@ -2,18 +2,19 @@ import type { ReactNode } from "react";
 import { Briefcase, Leaf, MapPin, TrendingUp } from "lucide-react";
 import type { Project, ProjectTotal } from "@/lib/data";
 import { fmtValue } from "@/lib/format";
-import { CATEGORY, t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 
 const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 const money = (v: number) => fmtValue(v, "V$");
 
-export function ProjectCard({ project: p, total, action }: { project: Project; total?: ProjectTotal; action?: ReactNode }) {
+export async function ProjectCard({ project: p, total, action }: { project: Project; total?: ProjectTotal; action?: ReactNode }) {
+  const t = await getT();
   const sought = p.fundingTarget - p.publicContribution;
   const progress = total && sought > 0 ? Math.min(1, total.units / sought) : 0;
   return (
     <article className="flex flex-col rounded-[2rem] border border-forest/10 bg-white p-6 shadow-soft" aria-labelledby={`p-${p.id}`}>
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-leaf">
-        <span>{CATEGORY[p.category] ?? p.category}</span>
+        <span>{t.categories[p.category] ?? p.category}</span>
         {p.region && (
           <span className="inline-flex items-center gap-1 text-ink/70">
             <MapPin className="h-3 w-3" aria-hidden="true" /> {p.region}

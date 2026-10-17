@@ -6,16 +6,20 @@ import { H, SYSTEMS, SystemsTable } from "@/components/systems-table";
 import { getBaseline, getLevers } from "@/lib/data";
 import { fmtLever } from "@/lib/format";
 import { LEVER_GROUPS } from "@/lib/levers";
-import { t } from "@/lib/messages";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { localizeParams, presetName } from "@/lib/localize";
 
-export const metadata: Metadata = { title: "Economic Systems", description: t.systemsPage.lead };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.systemsPage.eyebrow, description: t.systemsPage.lead };
+}
 
-const s = t.systemsPage;
 const OUTCOMES = ["gdp_pc", "productivity", "employment_rate", "unemployment", "real_wage", "private_investment", "revenue_share", "spending_share", "deficit_share", "debt_share"];
 
 export default async function SystemsPage() {
-  const baseline = await getBaseline();
-  const levers = baseline ? await getLevers(baseline.modelVersion) : [];
+  const [baseline, t, locale] = await Promise.all([getBaseline(), getT(), getLocale()]);
+  const s = t.systemsPage;
+  const levers = localizeParams(baseline ? await getLevers(baseline.modelVersion) : [], t);
   const byCode = Object.fromEntries(levers.map((l) => [l.code, l]));
   const today = baseline?.presets.find((p) => !p.family);
   const systems = SYSTEMS.map((f) => baseline?.presets.find((p) => p.family === f)).filter((p) => !!p);
@@ -37,7 +41,7 @@ export default async function SystemsPage() {
               {systems.map((p) => (
                 <li key={p.slug} className="flex flex-col rounded-[2rem] border border-forest/10 bg-white p-6">
                   <span className="grid h-10 w-10 place-items-center rounded-full bg-forest font-display text-lg font-bold text-white">{p.family}</span>
-                  <h2 className="mt-4 font-display text-2xl font-semibold leading-tight text-forest">{p.name}</h2>
+                  <h2 className="mt-4 font-display text-2xl font-semibold leading-tight text-forest">{presetName(t, p.slug, p.name)}</h2>
                   <p className="mt-3 flex-1 text-sm text-ink/80">{s.families[p.family!]}</p>
                   <Link href={`/experiment?preset=${p.family}`} className="mt-5 inline-flex items-center gap-2 font-bold text-forest hover:text-leaf">
                     {s.open} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -58,7 +62,7 @@ export default async function SystemsPage() {
                       <th scope="col" className="py-3 pr-4 font-bold">{s.today}</th>
                       {systems.map((p) => (
                         <th key={p.slug} scope="col" className="py-3 pr-4 font-bold">
-                          {p.family} · {p.name}
+                          {p.family} · {presetName(t, p.slug, p.name)}
                         </th>
                       ))}
                     </tr>
@@ -75,13 +79,13 @@ export default async function SystemsPage() {
                         return (
                           <tr key={c}>
                             <th scope="row" className="py-2.5 pr-4 font-semibold text-ink/80">{byCode[c].label}</th>
-                            <td className="py-2.5 pr-4">{fmtLever(base, byCode[c].unit)}</td>
+                            <td className="py-2.5 pr-4">{fmtLever(base, byCode[c].unit, locale)}</td>
                             {systems.map((p) => {
                               const v = Number(p.levers[c]);
                               const dir = Math.abs(v - base) < 1e-9 ? 0 : v > base ? 1 : -1;
                               return (
                                 <td key={p.slug} className={`py-2.5 pr-4 ${dir ? "font-semibold text-forest" : "text-ink/70"}`}>
-                                  {fmtLever(v, byCode[c].unit)}
+                                  {fmtLever(v, byCode[c].unit, locale)}
                                   {dir !== 0 && (
                                     <>
                                       <span aria-hidden="true"> {dir > 0 ? "↑" : "↓"}</span>
@@ -107,7 +111,7 @@ export default async function SystemsPage() {
           <p className="mt-2 max-w-3xl text-sm text-ink/70">{s.outcomesLead(H)}</p>
           {/* four engine runs, shared with /justice through the cache; the rest of the page doesn't wait */}
           <Suspense fallback={<p role="status" className="mt-6 text-ink/70">{t.lab.recalculating}</p>}>
-            <SystemsTable codes={OUTCOMES} labelledBy="outcomes" caption={`${s.outcomes}: year ${H}, compared with today's policies`} />
+            <SystemsTable codes={OUTCOMES} labelledBy="outcomes" caption={s.outcomesCaption(H)} />
           </Suspense>
           <Link href="/justice" className="mt-5 inline-flex items-center gap-2 font-bold text-forest hover:text-leaf">
             {s.justice} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />

@@ -3,23 +3,26 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getPopulation, type PopulationCell } from "@/lib/data";
-import { SECTOR, t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 
-export const metadata: Metadata = { title: "People and Society", description: t.people.lead };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.people.eyebrow, description: t.people.lead };
+}
 
-const p = t.people;
 const AGES = ["0-14", "15-64", "65+"];
 const LEVELS = ["primary", "lower_secondary", "upper_secondary", "tertiary"];
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 const int = (v: number) => v.toLocaleString("en");
 
 export default async function PeoplePage() {
-  const { cells, generator, seed } = await getPopulation();
+  const [{ cells, generator, seed }, t] = await Promise.all([getPopulation(), getT()]);
+  const p = t.people;
   const count = (keep: (c: PopulationCell) => boolean, from = cells) => from.filter(keep).reduce((s, c) => s + c.people, 0);
   const total = count(() => true);
   const working = count((c) => c.age === "15-64");
   const labour = count((c) => c.age === "15-64" && !!c.sector);
-  const sectors = Object.keys(SECTOR)
+  const sectors = Object.keys(t.sectors)
     .map((code) => ({ code, share: labour ? count((c) => c.sector === code) / labour : 0 }))
     .sort((a, b) => b.share - a.share);
   const regions = [...new Set(cells.map((c) => c.region))]
@@ -114,7 +117,7 @@ export default async function PeoplePage() {
                   {sectors.map((sc) => (
                     <li key={sc.code}>
                       <div className="flex justify-between text-sm">
-                        <span className="text-ink/80">{SECTOR[sc.code]}</span>
+                        <span className="text-ink/80">{t.sectors[sc.code]}</span>
                       </div>
                       <Bar value={sc.share} />
                     </li>

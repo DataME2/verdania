@@ -5,17 +5,18 @@ import { Landscape } from "@/components/landscape";
 import { MiniLab } from "@/components/mini-lab";
 import { Counter, Reveal } from "@/components/motion";
 import { getAllocatedTotal, getBaseline, getLevers, type Lever, type Preset } from "@/lib/data";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
+import { localizeParams, presetName } from "@/lib/localize";
 
 const SYSTEM_ORDER = ["model-a", "model-b", "model-c", "model-d"];
 const MINI_LEVERS = ["tau_top", "bite", "m"];
 const pct = (v: number | string | undefined) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
 
 export default async function Home() {
-  const [baseline, allocated] = await Promise.all([getBaseline(), getAllocatedTotal()]);
+  const [baseline, allocated, t] = await Promise.all([getBaseline(), getAllocatedTotal(), getT()]);
   const ind = baseline?.indicators ?? {};
   const version = baseline?.modelVersion ?? "0.1.0";
-  const levers = await getLevers(version);
+  const levers = localizeParams(await getLevers(version), t);
   const miniLevers = MINI_LEVERS.map((c) => levers.find((l) => l.code === c)).filter(Boolean) as Lever[];
   const systems = SYSTEM_ORDER.map((s) => baseline?.presets.find((p) => p.slug === s)).filter(Boolean) as Preset[];
 
@@ -51,7 +52,7 @@ export default async function Home() {
                 <Compass className="h-5 w-5" aria-hidden="true" /> {t.cta.explore}
               </Link>
             </div>
-            <ul className="mt-10 flex flex-wrap gap-2" aria-label="About the data">
+            <ul className="mt-10 flex flex-wrap gap-2" aria-label={t.hero.badgesLabel}>
               {[
                 [Database, t.badges.synthetic],
                 [Wallet, t.badges.virtual],
@@ -78,8 +79,8 @@ export default async function Home() {
                   <Wheat className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <span className="block text-xs font-bold uppercase tracking-wider text-ink/70">Economy</span>
-                  <strong className="text-forest">Agriculture-led</strong>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-ink/70">{t.hero.economyLabel}</span>
+                  <strong className="text-forest">{t.hero.economy}</strong>
                 </div>
               </div>
             </div>
@@ -130,7 +131,7 @@ export default async function Home() {
       </section>
 
       {/* ---------------------------------------------------------------- baseline figures (real, from Supabase) */}
-      <section className="border-b border-forest/10 bg-white px-5 py-16 lg:px-10" aria-label="Verdania at a glance">
+      <section className="border-b border-forest/10 bg-white px-5 py-16 lg:px-10" aria-label={t.stats.label}>
         <dl className="mx-auto grid max-w-[1240px] gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
             [t.stats.population, baseline?.population ?? null, "int"],
@@ -183,7 +184,7 @@ export default async function Home() {
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-forest font-display text-lg font-bold text-white">
                   {p.family}
                 </span>
-                <h3 className="mt-4 font-display text-2xl font-semibold leading-tight text-forest">{p.name}</h3>
+                <h3 className="mt-4 font-display text-2xl font-semibold leading-tight text-forest">{presetName(t, p.slug, p.name)}</h3>
                 <dl className="mt-4 flex-1 space-y-2 text-sm">
                   {(["tau_top", "cb", "s_pub"] as const).map((k) => (
                     <div key={k} className="flex justify-between gap-3 border-b border-forest/10 pb-2">

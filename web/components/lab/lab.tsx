@@ -7,18 +7,20 @@ import { AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, SlidersHorizontal
 import type { Evidence, Lever, Parameter } from "@/lib/data";
 import { fmtDelta, fmtParam, fmtValue } from "@/lib/format";
 import { LEVER_GROUPS } from "@/lib/levers";
-import { t } from "@/lib/messages";
+import { en } from "@/lib/messages";
 import { HORIZONS, type SimRequest } from "@/lib/sim-request";
 import { DecileChart, LineBandChart } from "./charts";
 import { DeltaChip, IndicatorCard } from "./indicator-card";
 import { LeverSlider } from "./lever-slider";
 import { SaveScenario } from "./save-scenario";
 import { SensitivityPanel } from "./sensitivity";
+import { useLocale, useT } from "../i18n";
 import { useSimulation } from "./use-simulation";
 
 export type PresetOption = { id: "baseline" | "A" | "B" | "C" | "D"; name: string; levers: Record<string, number | string> };
 
-const CHALLENGES = t.experiment.challenges;
+// Challenge slugs are the same in every language; their questions and suggestions are read per language.
+const SLUGS = en.experiment.challenges.map((c) => c.slug);
 const REGION_COLS = [
   { code: "mean_income", unit: "V$", desirable: "up" },
   { code: "poverty_relative", unit: "share", desirable: "down" },
@@ -57,14 +59,14 @@ function fromUrl(params: URLSearchParams, presets: PresetOption[], levers: Lever
     if (params.has(a.code) && Number.isFinite(v) && Math.abs(v - a.base) > EPS) structural[a.code] = Math.min(a.max, Math.max(a.min, v));
   }
   const h = Number(params.get("horizon"));
-  const challenge = CHALLENGES.find((c) => c.slug === params.get("challenge"))?.slug ?? CHALLENGES[0].slug;
+  const challenge = SLUGS.find((slug) => slug === params.get("challenge")) ?? SLUGS[0];
   return { challenge, preset, values, closure, horizon: (HORIZONS as readonly number[]).includes(h) ? (h as State["horizon"]) : 10, structural };
 }
 
 function toUrl(s: State, presets: PresetOption[]) {
   const start = presets.find((p) => p.id === s.preset)!.levers;
   const q = new URLSearchParams();
-  if (s.challenge !== CHALLENGES[0].slug) q.set("challenge", s.challenge);
+  if (s.challenge !== SLUGS[0]) q.set("challenge", s.challenge);
   if (s.preset !== "baseline") q.set("preset", s.preset);
   if (s.horizon !== 10) q.set("horizon", String(s.horizon));
   for (const [k, v] of Object.entries(s.values)) if (Math.abs(v - Number(start[k])) > EPS) q.set(k, String(v));
@@ -86,6 +88,9 @@ export function Lab({
   regions: Record<string, string>;
   signedIn: boolean;
 }) {
+  const t = useT();
+  const locale = useLocale();
+  const CHALLENGES = t.experiment.challenges;
   const params = useSearchParams();
   const byCode = useMemo(() => Object.fromEntries(levers.map((l) => [l.code, l])), [levers]);
   const [s, setS] = useState<State>(() => fromUrl(new URLSearchParams(params.toString()), presets, levers, assumptions));
@@ -326,7 +331,7 @@ export function Lab({
             {t.experiment.results} <span className="text-lg text-ink/70">· {t.experiment.at(h)}</span>
           </h2>
           <p className="text-xs font-semibold text-ink/70" aria-live="polite">
-            {loading ? t.lab.recalculating : data ? `Model v${data.model_version} · ${data.uncertainty.draws} draws · not a forecast` : ""}
+            {loading ? t.lab.recalculating : data ? t.lab.runStatus(data.model_version, data.uncertainty.draws) : ""}
           </p>
         </div>
 
@@ -369,14 +374,14 @@ export function Lab({
 
         <div ref={cards} className="grid scroll-mt-24 gap-4 sm:grid-cols-2 2xl:grid-cols-4" aria-live="polite">
           {sim.status !== "error" &&
-            ch.cards.map((c) => <IndicatorCard key={c} indicator={data?.indicators[c]} year={h} loading={loading} />)}
+            ch.cards.map((c) => <IndicatorCard key={c} indicator={data?.indicators[c]} year={h} loading={loading} locale={locale} />)}
         </div>
 
         {data && (
           <>
             <section className="rounded-[2rem] bg-white p-6 shadow-soft" aria-labelledby="chart-title">
               <h3 id="chart-title" className="font-display text-xl font-semibold text-forest">{t.experiment.chart}</h3>
-              <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Indicator">
+              <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t.experiment.indicatorPick}>
                 {ch.cards.map((c) => (
                   <button
                     key={c}
@@ -390,7 +395,7 @@ export function Lab({
                 ))}
               </div>
               <div className="mt-4">
-                <LineBandChart indicator={data.indicators[shown]} years={data.years} />
+                <LineBandChart indicator={data.indicators[shown]} years={data.years} locale={locale} />
               </div>
             </section>
 
@@ -402,6 +407,7 @@ export function Lab({
                   baseline={data.deciles.baseline?.disposable ?? []}
                   scenario={data.deciles.scenario?.disposable ?? []}
                   year={data.deciles.year}
+                  locale={locale}
                 />
               </div>
             </section>
@@ -432,7 +438,7 @@ export function Lab({
                               <td key={c.code} className="py-2.5 pr-4">
                                 <span className="block font-semibold">{fmtValue(v, c.unit)}</span>
                                 <span className="mt-1 block">
-                                  <DeltaChip delta={v == null || b == null ? null : v - b} unit={c.unit} desirable={c.desirable} />
+                                  <DeltaChip delta={v == null || b == null ? null : v - b} unit={c.unit} desirable={c.desirable} locale={locale} />
                                 </span>
                               </td>
                             );
@@ -455,7 +461,7 @@ export function Lab({
                     <li key={m.lever}>
                       <strong>{byCode[m.lever]?.label ?? t.experiment.closure}</strong>: {m.explanation}{" "}
                       <span className="text-ink/70">
-                        ({m.effects.map((e) => `${data.indicators[e.indicator]?.label}: ${fmtDelta(e.delta_at_horizon, data.indicators[e.indicator]?.unit ?? "index")}`).join("; ")})
+                        ({m.effects.map((e) => `${data.indicators[e.indicator]?.label}: ${fmtDelta(e.delta_at_horizon, data.indicators[e.indicator]?.unit ?? "index", locale)}`).join("; ")})
                       </span>
                     </li>
                   ))}

@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
 
-const p = t.privacy;
-
-export const metadata: Metadata = { title: p.title, description: p.lead };
+export async function generateMetadata(): Promise<Metadata> {
+  const p = (await getT()).privacy;
+  return { title: p.title, description: p.lead };
+}
 
 const link = "font-semibold text-forest underline hover:text-leaf";
 
 export default async function PrivacyPage({ searchParams }: PageProps<"/privacy">) {
-  const deleted = (await searchParams).deleted === "1";
+  const [params, t] = await Promise.all([searchParams, getT()]);
+  const p = t.privacy;
+  const deleted = params.deleted === "1";
   return (
     <section className="px-5 py-12 lg:px-10 lg:py-16">
       <div className="mx-auto max-w-3xl space-y-10">

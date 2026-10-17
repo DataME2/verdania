@@ -1,18 +1,20 @@
 "use server";
 
 import { headers } from "next/headers";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/i18n-server";
+import { en } from "@/lib/messages";
 import { clientIp, rateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export type SuggestionState = { sent?: boolean; error?: string };
 
-const TOPICS = Object.keys(t.contribute.topics);
+const TOPICS = Object.keys(en.contribute.topics); // the same codes in every language
 const allowed = rateLimiter(5, 10 * 60_000); // five messages per sender every ten minutes
 
 /** The database function validates again and caps the overall rate; this keeps the obvious cases off it. */
 export async function submitSuggestion(_prev: SuggestionState, form: FormData): Promise<SuggestionState> {
   if (String(form.get("website") ?? "")) return { sent: true }; // honeypot: bots fill every field, people never see this one
+  const t = await getT();
   if (!allowed(clientIp(await headers()))) return { error: t.contribute.busy };
 
   const topic = String(form.get("topic") ?? "");
