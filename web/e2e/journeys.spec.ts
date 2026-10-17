@@ -162,6 +162,21 @@ test("Contribute: the footer link reaches the form and its server action answers
   clean();
 });
 
+test("Privacy: the footer link reaches the notice, which points to the account page for deletion", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/methodology");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Privacy" }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Privacy" })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveCount(0); // the "account deleted" note only follows a deletion
+  const choices = page.getByRole("region", { name: "Your choices" });
+  await expect(choices).toContainText("Delete your account from your account page");
+  await expect(choices.getByRole("link", { name: "Your account" })).toHaveAttribute("href", "/account");
+  await page.goto("/sign-in");
+  await expect(page.getByRole("link", { name: "Read the privacy notice" })).toHaveAttribute("href", "/privacy");
+  clean();
+});
+
 test("People and Society: the synthetic population adds up to two million, by age, sex and region", async ({ page }) => {
   const clean = watchConsole(page);
   await page.goto("/people");

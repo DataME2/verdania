@@ -304,5 +304,47 @@ select test.ok((select (actor_id, details ->> 'reason') = (test.u(4), 'test of m
 select test.ok((select status from public.suggestions where topic = 'data') = 'done', 'the suggestion was triaged');
 drop table test.ids;
 
+-- ------------------------------------------------------------ deleting an account
+insert into public.suggestions (topic, message, name, email, user_id)
+values ('other', 'Sent with contact details', 'Ana', 'ana@example.org', test.u(1));
+create table test.before as select
+  (select count(*) from public.profiles) as profiles,
+  (select count(*) from public.virtual_portfolios) as portfolios,
+  (select count(*) from public.suggestions) as suggestions,
+  (select count(*) from public.audit_logs where actor_id = test.u(1)) as ana_audit;
+set role anon;
+select test.as_user(null);
+do $$ begin
+  perform public.delete_my_account();
+  raise exception 'FAIL: anon called delete_my_account';
+exception when insufficient_privilege then null; end $$;
+set role authenticated;
+select test.as_user(null);
+do $$ begin
+  perform public.delete_my_account();
+  raise exception 'FAIL: deleted without a signed-in user';
+exception when insufficient_privilege then null; end $$;
+select test.as_user(1);
+select public.delete_my_account();
+
+reset role;
+select test.ok(not exists (select 1 from auth.users where id = test.u(1)), 'Ana''s sign-in record is gone');
+select test.ok(not exists (select 1 from public.profiles where id = test.u(1))
+               and not exists (select 1 from public.user_roles where user_id = test.u(1)), 'her profile and roles are gone');
+select test.ok(not exists (select 1 from public.simulation_scenarios where title like 'Ana%'), 'her scenarios are gone, published ones too');
+select test.ok(not exists (select 1 from public.virtual_portfolios where owner_id = test.u(1))
+               and (select count(*) from public.virtual_portfolios) = (select portfolios - 1 from test.before),
+               'her portfolio, and with it her allocations and ledger, is gone');
+select test.ok((select count(*) from public.profiles) = (select profiles - 1 from test.before), 'nobody else''s profile is touched');
+select test.ok((select count(*) from public.suggestions) = (select suggestions from test.before)
+               and not exists (select 1 from public.suggestions where user_id = test.u(1) or email = 'ana@example.org' or name = 'Ana'),
+               'her suggestions stay, unlinked, without her name and email');
+select test.ok((select count(*) from public.audit_logs where actor_id = test.u(1)) = (select ana_audit + 1 from test.before)
+               and exists (select 1 from public.audit_logs where action = 'account.deleted' and entity_id = test.u(1)::text),
+               'the audit log keeps only her user id, and records the deletion');
+select test.ok((select count(*) from public.virtual_ledger_entries l join public.virtual_portfolios p on p.id = l.portfolio_id
+                where p.owner_id = test.u(4)) > 0, 'other participants'' ledgers are intact');
+drop table test.before;
+
 reset role;
 select 'ALL CHECKS PASSED' as result;

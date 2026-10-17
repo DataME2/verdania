@@ -38,7 +38,10 @@ export function SaveScenario({
       <summary className="flex cursor-pointer items-center gap-2 font-bold text-forest">
         <Save className="h-4 w-4" aria-hidden="true" /> {t.scenarios.save}
       </summary>
-      <p className="mt-2 text-sm text-ink/70">{t.scenarios.saveLead}</p>
+      <p className="mt-2 text-sm text-ink/70">
+        {t.scenarios.saveLead}{" "}
+        <Link href="/privacy#scenarios" className="font-semibold text-forest underline hover:text-leaf">{t.scenarios.privacyLink}</Link>
+      </p>
       <form action={action} className="mt-4 space-y-3">
         <input type="hidden" name="request" value={JSON.stringify(request)} />
         <input type="hidden" name="challenge" value={challenge} />
