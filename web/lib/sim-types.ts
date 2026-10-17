@@ -42,3 +42,19 @@ export type SimResult = {
   accounting_checks: { passed: boolean; max_relative_error: number | null };
   uncertainty: { draws: number; percentiles: number[] };
 };
+
+// /v1/sensitivity: each structural parameter at the low and high end of its range, the others central,
+// and how much that moves the policy's effect (scenario minus baseline) on each target at the horizon.
+export type Sensitivity = {
+  model_version: string;
+  horizon: number;
+  targets: Record<string, { label: string; unit: string }>;
+  rows: {
+    parameter: string;
+    label: string;
+    low: number;
+    high: number;
+    evidence: "empirical-range" | "contested" | "theoretical" | "synthetic";
+    effect: Record<string, { low: number | null; high: number | null }>;
+  }[];
+};

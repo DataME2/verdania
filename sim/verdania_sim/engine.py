@@ -289,6 +289,20 @@ def _mechanisms(lev, sp, base, scen, horizon):
 SENSITIVITY_TARGETS = ("gdp_pc", "gini_disposable", "poverty_anchored", "debt_share")
 
 
+def sensitivity(levers=None, preset=None, horizon=10, structural=None) -> dict:
+    """Which assumptions drive a policy's effect, on their own: no uncertainty draws, about a second.
+    Served separately so that simulate() responses and their fingerprints stay exactly as they were."""
+    inputs = canonical_inputs(levers=levers, preset=preset, horizon=horizon, structural=structural)
+    fixed = tuple(sorted(inputs["structural_overrides"].items()))
+    small = subsample(generate(POPULATION_SEED))
+    return {
+        "model_version": MODEL_VERSION,
+        "horizon": inputs["horizon"],
+        "targets": {c: {"label": INDICATORS[c][0], "unit": INDICATORS[c][1]} for c in SENSITIVITY_TARGETS},
+        "rows": _sensitivity(small, inputs["levers"], fixed, inputs["horizon"]),
+    }
+
+
 def _sensitivity(small, lev, fixed, horizon):
     """One-at-a-time: each structural parameter at its low and high value, effect on the policy delta."""
     fixed_d = dict(fixed)

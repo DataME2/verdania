@@ -38,6 +38,12 @@ def test_simulates():
     assert body["inputs"]["levers"]["bite"] == 0.6 and len(body["years"]) == 6
 
 
+def test_sensitivity_route():
+    status, body = call(event("/v1/sensitivity", body={"preset": "C", "horizon": 5}))
+    assert status == 200 and len(body["rows"]) == 23
+    assert call(event("/v1/sensitivity", body={"structural": {"psi": 9}}))[0] == 422
+
+
 @pytest.mark.parametrize("body", [
     {"levers": {"tau_top": 0.95}},
     {"horizon": 7},

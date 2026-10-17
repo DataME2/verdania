@@ -129,6 +129,17 @@ def test_every_explained_channel_is_returned():
     assert set(engine.MECHANISMS) == set(LEVERS) | {"closure"}
 
 
+def test_sensitivity_on_its_own():
+    r = engine.sensitivity(preset="B", horizon=5, structural={"psi": 0.6})
+    rows = {row["parameter"]: row for row in r["rows"]}
+    assert set(rows) == set(CENTRAL) - {"psi"}  # an assumption the user fixed is not varied
+    assert set(r["targets"]) == set(engine.SENSITIVITY_TARGETS)
+    assert any(abs(e["high"]) > 1e-6 for row in rows.values() for e in row["effect"].values())
+    # with no policy change there is no policy effect for an assumption to move
+    still = engine.sensitivity(horizon=5)
+    assert all(abs(e["low"]) < 1e-9 and abs(e["high"]) < 1e-9 for row in still["rows"] for e in row["effect"].values())
+
+
 def test_full_mode_has_sensitivity():
     r = engine.run(preset="B", horizon=5, mode="full")
     assert r["uncertainty"]["draws"] == 200

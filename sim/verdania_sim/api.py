@@ -51,6 +51,16 @@ def parameters():
             "indicators": {c: {"label": l, "unit": u, "desirable": d} for c, (l, u, d) in engine.INDICATORS.items()}}
 
 
+@app.post("/v1/sensitivity", dependencies=[Depends(require_key)])
+def sensitivity(req: SimRequest):
+    if req.model_version and req.model_version != MODEL_VERSION:
+        raise HTTPException(409, f"this engine runs model {MODEL_VERSION}, not {req.model_version}")
+    try:
+        return engine.sensitivity(levers=req.levers, preset=req.preset, horizon=req.horizon, structural=req.structural)
+    except ValueError as err:
+        raise HTTPException(422, str(err)) from err
+
+
 @app.post("/v1/simulate", dependencies=[Depends(require_key)])
 def simulate(req: SimRequest):
     if req.model_version and req.model_version != MODEL_VERSION:

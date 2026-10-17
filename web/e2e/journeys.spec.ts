@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 // The main journeys, anonymously (PRD §5). Signing in needs a real Google account, so J3's database side
@@ -54,6 +55,22 @@ test("Challenges: Challenge 2 brings its own question and suggestions; results s
   await expect(regions.getByRole("row")).toHaveCount(7);
   await expect(regions.getByRole("row", { name: /Campovera/ })).not.toContainText("—");
   clean();
+});
+
+test("Sensitivity: opening the panel ranks the assumptions that move a minimum-wage rise", async ({ page }) => {
+  const clean = watchConsole(page);
+  await page.goto("/experiment?bite=0.6");
+  await expect(page.getByText("Accounting identities hold")).toBeVisible();
+  await page.getByText("Which assumptions drive this result?").click();
+  const panel = page.locator("details", { hasText: "Which assumptions drive this result?" });
+  await expect(panel.getByRole("listitem").first()).toContainText("Low end");
+  await expect(panel.getByRole("listitem")).toHaveCount(8);
+  await expect(panel).toContainText("Unemployment response to minimum-wage bite");
+  await panel.getByRole("button", { name: "Public debt (gross)" }).click();
+  await expect(panel).toContainText("Change in your policy's effect on Public debt (gross)");
+  clean(); // before axe, whose own stylesheet fetch the CSP blocks
+  const { violations } = await new AxeBuilder({ page }).include("details").withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
 });
 
 test("Challenge this result: an assumption override shows as a chip, travels in the URL and can be undone", async ({ page }) => {
